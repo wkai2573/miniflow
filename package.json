@@ -1,0 +1,32 @@
+{
+  "name": "miniflow",
+  "version": "0.1.0",
+  "description": "輕量、好嵌入的簡易流程圖：以格狀描述節點，輸出 SVG 或 Web Component。",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./element": {
+      "types": "./dist/element.d.ts",
+      "import": "./dist/element.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/index.ts src/element.ts --outdir dist --target browser --format esm && bun build src/auto.ts --outfile dist/miniflow.js --target browser --format iife && tsc -p tsconfig.build.json",
+    "example": "bun run build && bun run examples/build-example.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2"
+  }
+}
