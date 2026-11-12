@@ -23,7 +23,8 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit",
     "build": "bun build src/index.ts src/element.ts --outdir dist --target browser --format esm && bun build src/auto.ts --outfile dist/miniflow.js --target browser --format iife && tsc -p tsconfig.build.json",
-    "example": "bun run build && bun run examples/build-example.ts"
+    "example": "bun run build && bun run examples/build-example.ts",
+    "build:showcase": "bun run example"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",
