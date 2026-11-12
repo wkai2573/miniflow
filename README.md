@@ -14,15 +14,19 @@
 import { render } from 'miniflow';
 
 const svg = render({
-  title: '上傳流程',
+  title: '電商訂單與履約流程',
   nodes: [
-    { id: 'file', kind: 'external', label: 'CRM 檔', sub: '.csv', row: 0, col: 0 },
-    { id: 'upload', kind: 'frontend', label: '上傳', row: 0, col: 1, href: '/upload' },
-    { id: 'db', kind: 'database', label: '資料庫', row: 0, col: 2 },
+    { id: 'cart', kind: 'frontend', label: '購物車', sub: 'Web / App', row: 0, col: 0, href: '/cart' },
+    { id: 'checkout', kind: 'frontend', label: '結帳收銀台', row: 0, col: 1, href: '/checkout' },
+    { id: 'stock', kind: 'backend', icon: 'decision', label: '檢查庫存', row: 0, col: 2 },
+    { id: 'stripe', kind: 'external', label: '綠界 / Stripe', row: 0, col: 3 },
+    { id: 'db', kind: 'database', label: '訂單庫存庫', row: 0, col: 4 },
   ],
   edges: [
-    { from: 'file', to: 'upload' },
-    { from: 'upload', to: 'db', label: '寫入', tone: 'emphasis' },
+    { from: 'cart', to: 'checkout' },
+    { from: 'checkout', to: 'stock', label: '送出訂單', tone: 'emphasis' },
+    { from: 'stock', to: 'stripe', label: '充足扣款', tone: 'emphasis' },
+    { from: 'stripe', to: 'db', label: '付款完成 Webhook', tone: 'emphasis' },
   ],
 });
 ```
@@ -128,7 +132,10 @@ bun run build       # 輸出 dist
 bun run example     # 在 examples/out 產生範例頁
 ```
 
-`examples/mediator.ts` 是完整的範例規格。
+完整的旗艦範例規格請參閱 `examples/` 目錄：
+- `examples/ecommerce.ts`：電商訂單與金流履約流程
+- `examples/cicd.ts`：CI/CD 自動化建置與部署流水線
+- `examples/rag.ts`：AI / RAG 檢索增強問答管線
 
 ## 授權
 
