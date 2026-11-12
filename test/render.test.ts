@@ -72,12 +72,17 @@ describe('render 外框', () => {
 
   test('外框包住指定節點，標籤顯示在外框上', () => {
     const svg = render(spec);
-    expect(svg).toContain('<rect class="mf-frame" x="-30" y="-36" width="420" height="116"');
+    expect(svg).toContain('<rect class="mf-frame" x="-20" y="-36" width="400" height="116"');
     expect(svg).toContain('>01 上傳</text>');
   });
 
   test('畫布範圍包含外框', () => {
-    expect(render(spec)).toContain('viewBox="-40 -46 ');
+    expect(render(spec)).toContain('viewBox="-30 -46 ');
+  });
+
+  test('可透過 layout.framePad 自訂外框留白', () => {
+    const svg = render({ ...spec, layout: { framePad: { left: 10, right: 10 } } });
+    expect(svg).toContain('<rect class="mf-frame" x="-10" y="-36" width="380" height="116"');
   });
 
   test('外框包住不存在的節點時拋出指名的錯誤', () => {

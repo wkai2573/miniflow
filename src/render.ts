@@ -145,7 +145,7 @@ export function render(spec: FlowSpec): string {
       if (!r) throw new Error(`外框包住的節點 "${id}" 不存在`);
       return r;
     });
-    const fr = frameRect(wrapped);
+    const fr = frameRect(wrapped, spec.layout?.framePad);
     frameRects.push(fr);
     frames.push(
       `<rect class="mf-frame" x="${num(fr.x)}" y="${num(fr.y)}" width="${num(fr.w)}" height="${num(fr.h)}" rx="12"/>`,

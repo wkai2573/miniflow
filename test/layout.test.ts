@@ -40,12 +40,17 @@ describe('layoutNodes', () => {
 });
 
 describe('frameRect', () => {
-  test('包住一組節點，左右留 30、上方留 36 放標籤、下方留 20', () => {
+  test('包住一組節點，左右留 20、上方留 36 放標籤、下方留 20', () => {
     const frame = frameRect([
       { x: 40, y: 60, w: 150, h: 60 },
       { x: 450, y: 60, w: 150, h: 60 },
     ]);
-    expect(frame).toEqual({ x: 10, y: 24, w: 620, h: 116 });
+    expect(frame).toEqual({ x: 20, y: 24, w: 600, h: 116 });
+  });
+
+  test('可自訂外框間距', () => {
+    const frame = frameRect([{ x: 40, y: 60, w: 150, h: 60 }], { left: 10, right: 10, top: 20, bottom: 15 });
+    expect(frame).toEqual({ x: 30, y: 40, w: 170, h: 95 });
   });
 
   test('沒有節點時拋出錯誤', () => {

@@ -49,11 +49,19 @@ export interface LegendSpec {
   counts?: boolean;
 }
 
+export interface FramePadOptions {
+  left?: number;
+  right?: number;
+  top?: number;
+  bottom?: number;
+}
+
 export interface LayoutOptions {
   nodeW?: number;
   nodeH?: number;
   gapX?: number;
   gapY?: number;
+  framePad?: FramePadOptions;
 }
 
 export interface FlowSpec {

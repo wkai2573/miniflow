@@ -94,7 +94,7 @@ defineFlowDiagram();
 
 ### 版面 `layout`
 
-`{ nodeW, nodeH, gapX, gapY }`，預設為 150、60、60、90。
+`{ nodeW, nodeH, gapX, gapY, framePad }`，節點大小與間距預設為 150、60、60、90；外框留白 `framePad` 預設為 `{ left: 20, right: 20, top: 36, bottom: 20 }`（相鄰外框之間自動保留 20px 空隙，避免相黏）。
 
 ## 換主題
 
