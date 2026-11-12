@@ -21,7 +21,7 @@ export const cicd: FlowSpec = {
       sub: 'main 分支 PR',
       row: 0,
       col: 0,
-      href: 'https://github.com',
+      href: '#git_pr',
       title: '檢視 Pull Request',
     },
     {
@@ -48,7 +48,7 @@ export const cicd: FlowSpec = {
       sub: '#dev-alerts 頻道',
       row: 1,
       col: 2,
-      href: 'https://slack.com',
+      href: '#slack_alert',
       title: '前往 Slack 頻道',
     },
     {
@@ -67,7 +67,7 @@ export const cicd: FlowSpec = {
       row: 0,
       col: 4,
       rowSpan: 2,
-      href: '/registry/artifacts',
+      href: '#registry',
       title: '瀏覽容器儲存庫',
     },
     {
@@ -94,7 +94,7 @@ export const cicd: FlowSpec = {
       sub: 'K8s 滾動更新',
       row: 0,
       col: 7,
-      href: '/k8s/workloads',
+      href: '#deploy_prod',
       title: 'K8s 叢集控制台',
     },
     {
@@ -104,7 +104,7 @@ export const cicd: FlowSpec = {
       sub: 'PagerDuty On-Call',
       row: 1,
       col: 6,
-      href: 'https://pagerduty.com',
+      href: '#rollback',
       title: 'PagerDuty 事件回應',
     },
   ],

@@ -21,7 +21,7 @@ export const ecommerce: FlowSpec = {
       sub: 'Web / App',
       row: 0,
       col: 0,
-      href: '/cart',
+      href: '#cart',
       title: '前往購物車',
     },
     {
@@ -31,7 +31,7 @@ export const ecommerce: FlowSpec = {
       sub: '填寫收件資訊',
       row: 0,
       col: 1,
-      href: '/checkout',
+      href: '#checkout',
       title: '前往結帳',
     },
     {
@@ -50,7 +50,7 @@ export const ecommerce: FlowSpec = {
       sub: '發送補貨通知',
       row: 1,
       col: 2,
-      href: '/admin/restock',
+      href: '#restock_alert',
       title: '檢視補貨清單',
     },
     {
@@ -68,7 +68,7 @@ export const ecommerce: FlowSpec = {
       sub: '信用卡 / 行動支付',
       row: 0,
       col: 4,
-      href: 'https://stripe.com',
+      href: '#stripe',
       title: '第三方金流閘道',
     },
     {
@@ -79,7 +79,7 @@ export const ecommerce: FlowSpec = {
       row: 0,
       col: 5,
       rowSpan: 2,
-      href: '/admin/orders',
+      href: '#order_db',
       title: '管理後台：訂單資料庫',
     },
     {
@@ -89,7 +89,7 @@ export const ecommerce: FlowSpec = {
       sub: '黑貓宅急便',
       row: 0,
       col: 6,
-      href: '/logistics/tracking',
+      href: '#logistics',
       title: '追蹤託運單號',
     },
     {

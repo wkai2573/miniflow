@@ -21,7 +21,7 @@ export const rag: FlowSpec = {
       sub: 'Next.js / React',
       row: 0,
       col: 0,
-      href: '/chat',
+      href: '#chat_ui',
       title: '前往對話介面',
     },
     {
@@ -56,7 +56,7 @@ export const rag: FlowSpec = {
       sub: 'pgvector / Qdrant',
       row: 1,
       col: 3,
-      href: '/vector-db/dashboard',
+      href: '#vector_db',
       title: '檢視向量索引狀態',
     },
     {
@@ -66,7 +66,7 @@ export const rag: FlowSpec = {
       sub: 'Gemini 2.5 Flash',
       row: 0,
       col: 3,
-      href: 'https://ai.google.dev',
+      href: '#llm_core',
       title: 'Google AI Studio',
     },
     {
@@ -85,7 +85,7 @@ export const rag: FlowSpec = {
       sub: 'SSE 打字機效果',
       row: 0,
       col: 5,
-      href: '/chat/stream',
+      href: '#stream_client',
       title: '串流偵錯監聽',
     },
   ],

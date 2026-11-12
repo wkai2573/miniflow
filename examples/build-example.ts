@@ -92,6 +92,37 @@ const page = ({
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.03);
       overflow-x: auto;
     }
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: auto;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -118,6 +149,38 @@ const page = ({
     ${body}
   </div>
 </main>
+<div class="toast-container" id="toast-container"></div>
+<script>
+  function showToast(label, id) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    const pin = document.createTextNode('📌 點擊節點：');
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    const suffix = document.createTextNode(' (' + id + ')（範例已停用外部跳轉）');
+    toast.appendChild(pin);
+    toast.appendChild(strong);
+    toast.appendChild(suffix);
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 250);
+    }, 2000);
+  }
+
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a.mf-link');
+    if (!link) return;
+    e.preventDefault();
+    const id = link.getAttribute('data-id') || '';
+    const textEl = link.querySelector('.mf-text');
+    const label = textEl ? textEl.textContent : id;
+    showToast(label, id);
+  });
+</script>
 </body>
 </html>`;
 
@@ -287,6 +350,37 @@ const demoElementHtml = `<!doctype html>
       font-size: 11px;
       margin-right: 8px;
     }
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.4;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: auto;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -326,6 +420,7 @@ const demoElementHtml = `<!doctype html>
     </div>
   </div>
 </main>
+<div class="toast-container" id="toast-container"></div>
 
 <script src="miniflow.js"></script>
 <script>
@@ -334,6 +429,26 @@ const demoElementHtml = `<!doctype html>
   const logsEl = document.getElementById('logs');
   const clearBtn = document.getElementById('clear-btn');
   const buttons = document.querySelectorAll('.tab-btn');
+
+  function showToast(label, id) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    const pin = document.createTextNode('📌 點擊節點：');
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    const suffix = document.createTextNode(' (' + id + ')（範例已停用外部跳轉）');
+    toast.appendChild(pin);
+    toast.appendChild(strong);
+    toast.appendChild(suffix);
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 250);
+    }, 2000);
+  }
 
   // 初始化預設規格
   diagram.spec = specs.ecommerce;
@@ -358,6 +473,10 @@ const demoElementHtml = `<!doctype html>
     e.preventDefault();
     const { id, href } = e.detail;
     addLog('NODE_CLICK', '攔截點擊事件：nodeId="' + id + '" → href="' + href + '" (已防止全頁跳轉)');
+    const nodeEl = diagram.shadowRoot && diagram.shadowRoot.querySelector('a.mf-link[data-id="' + id + '"]');
+    const textEl = nodeEl && nodeEl.querySelector('.mf-text');
+    const label = textEl ? textEl.textContent : id;
+    showToast(label, id);
   });
 
   function addLog(type, text) {
