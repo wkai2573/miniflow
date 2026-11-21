@@ -1,32 +1,34 @@
 # miniflow
 
-輕量、好嵌入的簡易流程圖。用 JSON 描述節點在第幾列第幾欄、誰連到誰，輸出一段 SVG，或直接放一個 `<flow-diagram>` 標籤。
+**English** | [繁體中文](README.zh-TW.md)
 
-設計概念參考 [archify](https://github.com/tt-a1i/archify)，但是全新實作，沒有共用任何程式碼。只保留最常用的部分：格狀版面、自動連線、外框、圖例，不含檢視器、縮放、匯出。
+A lightweight, easy-to-embed flowchart library. Describe in JSON which grid row and column each node sits in and what connects to what, and get back an SVG, or drop in a single `<flow-diagram>` tag.
 
-## 快速開始
+The design is inspired by [archify](https://github.com/tt-a1i/archify), but it is a fresh implementation that shares no code. It keeps only the most commonly used parts: grid layout, automatic edge routing, frames and a legend. There is no viewer, zoom or export.
 
-### 純函式
+## Quick start
 
-輸入規格，輸出 SVG 字串。可用於任何框架、後端或靜態頁。
+### Pure function
+
+Pass in a spec, get back an SVG string. Works with any framework, on a backend, or in a static page.
 
 ```ts
 import { render } from 'miniflow';
 
 const svg = render({
-  title: '電商訂單與履約流程',
+  title: 'E-commerce Order and Fulfillment',
   nodes: [
-    { id: 'cart', kind: 'frontend', label: '購物車', sub: 'Web / App', row: 0, col: 0, href: '/cart' },
-    { id: 'checkout', kind: 'frontend', label: '結帳收銀台', row: 0, col: 1, href: '/checkout' },
-    { id: 'stock', kind: 'backend', icon: 'decision', label: '檢查庫存', row: 0, col: 2 },
-    { id: 'stripe', kind: 'external', label: '綠界 / Stripe', row: 0, col: 3 },
-    { id: 'db', kind: 'database', label: '訂單庫存庫', row: 0, col: 4 },
+    { id: 'cart', kind: 'frontend', label: 'Shopping cart', sub: 'Web / App', row: 0, col: 0, href: '/cart' },
+    { id: 'checkout', kind: 'frontend', label: 'Checkout', row: 0, col: 1, href: '/checkout' },
+    { id: 'stock', kind: 'backend', icon: 'decision', label: 'Check stock', row: 0, col: 2 },
+    { id: 'stripe', kind: 'external', label: 'ECPay / Stripe', row: 0, col: 3 },
+    { id: 'db', kind: 'database', label: 'Order & inventory DB', row: 0, col: 4 },
   ],
   edges: [
     { from: 'cart', to: 'checkout' },
-    { from: 'checkout', to: 'stock', label: '送出訂單', tone: 'emphasis' },
-    { from: 'stock', to: 'stripe', label: '充足扣款', tone: 'emphasis' },
-    { from: 'stripe', to: 'db', label: '付款完成 Webhook', tone: 'emphasis' },
+    { from: 'checkout', to: 'stock', label: 'Submit order', tone: 'emphasis' },
+    { from: 'stock', to: 'stripe', label: 'Charge if in stock', tone: 'emphasis' },
+    { from: 'stripe', to: 'db', label: 'Payment completed Webhook', tone: 'emphasis' },
   ],
 });
 ```
@@ -37,106 +39,106 @@ const svg = render({
 <script src="miniflow.js"></script>
 <flow-diagram id="flow"></flow-diagram>
 <script>
-  document.getElementById('flow').spec = { nodes: [/* 同上 */] };
+  document.getElementById('flow').spec = { nodes: [/* same as above */] };
 </script>
 ```
 
-也可以把規格寫在屬性裡：`<flow-diagram spec='{"nodes":[...]}'>`。模組方式使用時：
+You can also put the spec in an attribute: `<flow-diagram spec='{"nodes":[...]}'>`. When using it as a module:
 
 ```ts
 import { defineFlowDiagram } from 'miniflow/element';
 defineFlowDiagram();
 ```
 
-點擊有 `href` 的節點時，元件會先送出可取消的 `node-click` 事件，事件的 `detail` 帶有節點的 `id` 與 `href`。寄主專案用自己的路由器處理導覽時，在事件裡呼叫 `preventDefault()` 即可，不會整頁跳轉。
+When a node that has an `href` is clicked, the component first dispatches a cancelable `node-click` event whose `detail` carries the node's `id` and `href`. If the host project handles navigation with its own router, call `preventDefault()` in the event handler and the page will not navigate away.
 
-規格有錯誤時，元件在原位顯示錯誤訊息，不會讓頁面壞掉。
+When the spec has errors, the component shows the error message in place instead of breaking the page.
 
-## 規格
+## Spec
 
-### 節點 `nodes`
+### Nodes `nodes`
 
-| 欄位 | 說明 |
+| Field | Description |
 | --- | --- |
-| `id` | 必填，不可重複 |
-| `kind` | 必填，`frontend`、`backend`、`database`、`external` 其中之一，決定顏色 |
-| `label` | 必填，主標籤 |
-| `sub` | 副標 |
-| `row`、`col` | 必填，格位，從 0 開始。列由上往下，欄由左往右 |
-| `rowSpan`、`colSpan` | 跨列、跨欄，預設 1 |
-| `icon` | 左上角圖示，預設依 `kind` 決定。可用 `decision` 或 `none` |
-| `href` | 點擊後前往的網址。`javascript:`、`data:`、`vbscript:` 開頭的網址不會輸出 |
-| `title` | 滑過時的提示文字 |
-| `pos`、`size` | 手動座標與大小，優先於格位 |
+| `id` | Required, must be unique |
+| `kind` | Required, the node kind: one of `frontend`, `backend`, `database`, `external`. Determines the color |
+| `label` | Required, the main label |
+| `sub` | Subtitle |
+| `row`, `col` | Required, the grid cell, starting from 0. Rows go top to bottom, columns go left to right |
+| `rowSpan`, `colSpan` | Number of rows or columns to span, default 1 |
+| `icon` | Icon in the top-left corner, defaults to one chosen by `kind`. Can be `decision` or `none` |
+| `href` | URL to go to when clicked. URLs starting with `javascript:`, `data:` or `vbscript:` are not output |
+| `title` | Tooltip text shown on hover |
+| `pos`, `size` | Manual position and size, which take precedence over the grid cell |
 
-### 連線 `edges`
+### Edges `edges`
 
-| 欄位 | 說明 |
+| Field | Description |
 | --- | --- |
-| `from`、`to` | 必填，節點 id |
-| `label` | 連線上的標籤 |
-| `tone` | `default`、`emphasis`、`dashed` |
-| `fromSide`、`toSide` | 手動指定出入的邊：`left`、`right`、`top`、`bottom`。兩個要一起指定，且不可相同 |
+| `from`, `to` | Required, node ids |
+| `label` | Label on the edge |
+| `tone` | The edge tone: `default`, `emphasis`, `dashed` |
+| `fromSide`, `toSide` | Manually choose the sides to leave and enter: `left`, `right`, `top`, `bottom`. Specify both together, and they must differ |
 
-自動路由規則：
+Automatic routing rules:
 
-1. 兩個節點上下相疊時，畫垂直直線。
-2. 左右相鄰且高度有重疊時，畫水平直線，高度取來源中心，目標比來源高時仍水平接入。
-3. 其他情況，水平離開來源，轉一個彎，垂直進入目標。
+1. When two nodes are stacked vertically, draw a straight vertical line.
+2. When they are horizontally adjacent and overlap in height, draw a straight horizontal line at the height of the source's center. If the target is higher than the source, it is still entered horizontally.
+3. Otherwise, leave the source horizontally, make one turn, and enter the target vertically.
 
-### 外框 `frames`
+### Frames `frames`
 
-`{ label, wraps: ['id', ...] }`，自動畫出包住這些節點的外框，標籤放在左上角。
+`{ label, wraps: ['id', ...] }`. Automatically draws a frame around those nodes, with the label in the top-left corner.
 
-### 圖例 `legend`
+### Legend `legend`
 
-`true` 或 `{ title, labels, counts }`。只列出實際用到的類型。預設標籤為英文，用 `labels` 改名，`counts: false` 關閉節點數量。
+`true` or `{ title, labels, counts }`. Only the kinds actually in use are listed. The default labels are in English; use `labels` to rename them, and `counts: false` to turn off the node counts.
 
-### 版面 `layout`
+### Layout `layout`
 
-`{ nodeW, nodeH, gapX, gapY, framePad }`，節點大小與間距預設為 150、60、60、90；外框留白 `framePad` 預設為 `{ left: 20, right: 20, top: 36, bottom: 20 }`（相鄰外框之間自動保留 20px 空隙，避免相黏）。
+`{ nodeW, nodeH, gapX, gapY, framePad }`. Node size and gaps default to 150, 60, 60 and 90. The frame padding `framePad` defaults to `{ left: 20, right: 20, top: 36, bottom: 20 }` (a 20px gap is automatically kept between adjacent frames so they do not touch).
 
-## 換主題
+## Theming
 
-顏色全部走 CSS 變數並附預設值。在外層設定變數就能配合寄主專案，Web Component 的陰影邊界不會擋住變數。
+All colors go through CSS variables with default values. Set the variables on an outer element to match the host project; the shadow boundary of the Web Component does not block them.
 
-| 變數 | 用途 |
+| Variable | Purpose |
 | --- | --- |
-| `--mf-font` | 字型 |
-| `--mf-text`、`--mf-muted` | 主要與次要文字 |
-| `--mf-surface` | 節點底色與標籤底色，用來遮住底下的連線 |
-| `--mf-frontend`、`--mf-backend`、`--mf-database`、`--mf-external` | 各類型的框線與圖示顏色 |
-| `--mf-frontend-fill` 等同名加 `-fill` | 各類型的填色 |
-| `--mf-arrow`、`--mf-arrow-emphasis`、`--mf-arrow-dashed` | 三種連線顏色 |
-| `--mf-pill-border` | 連線標籤的框線 |
-| `--mf-frame-fill`、`--mf-frame-stroke` | 外框的填色與框線 |
-| `--mf-frame-label-bg`、`--mf-frame-label-border`、`--mf-frame-text` | 外框標籤 |
-| `--mf-badge-border` | 圖例數量徽章的框線 |
+| `--mf-font` | Font |
+| `--mf-text`, `--mf-muted` | Primary and secondary text |
+| `--mf-surface` | Fill of nodes and label pills, used to hide the edges underneath |
+| `--mf-frontend`, `--mf-backend`, `--mf-database`, `--mf-external` | Border and icon color of each node kind |
+| `--mf-frontend-fill` etc., the same names with `-fill` | Fill color of each node kind |
+| `--mf-arrow`, `--mf-arrow-emphasis`, `--mf-arrow-dashed` | Colors of the three edge tones |
+| `--mf-pill-border` | Border of the edge label pill |
+| `--mf-frame-fill`, `--mf-frame-stroke` | Fill and border of frames |
+| `--mf-frame-label-bg`, `--mf-frame-label-border`, `--mf-frame-text` | Frame labels |
+| `--mf-badge-border` | Border of the legend count badge |
 
-背景預設透明，直接沿用寄主頁面的底色。
+The background is transparent by default and simply takes on the host page's background.
 
-## 限制
+## Limitations
 
-- 自動路由只處理直線與單一轉角，不會閃避中間的其他節點。連線會穿過節點時，改用 `fromSide` 與 `toSide` 指定，或調整格位。
-- 外框是矩形，不處理外框之間互相重疊。
-- 標籤膠囊的寬度用字元類別估算，換成差異很大的字型時可能略寬或略窄。
-- 沒有縮放、拖曳、匯出，也沒有深色主題的內建色票，需要時自行覆蓋變數。
+- Automatic routing only handles straight lines and a single corner, and does not route around other nodes in between. When an edge would pass through a node, set `fromSide` and `toSide` instead, or adjust the grid cells.
+- Frames are rectangles, and overlapping between frames is not handled.
+- The width of a label pill is estimated from character classes, so with a very different font it may come out slightly too wide or too narrow.
+- There is no zoom, drag or export, and no built-in dark theme palette; override the variables yourself when you need one.
 
-## 開發
+## Development
 
 ```sh
 bun install
-bun test            # 單元測試
-bun run typecheck   # 型別檢查
-bun run build       # 輸出 dist
-bun run example     # 在 examples/out 產生範例頁
+bun test            # unit tests
+bun run typecheck   # type check
+bun run build       # output dist
+bun run example     # generate the example pages in examples/out
 ```
 
-完整的旗艦範例規格請參閱 `examples/` 目錄：
-- `examples/ecommerce.ts`：電商訂單與金流履約流程
-- `examples/cicd.ts`：CI/CD 自動化建置與部署流水線
-- `examples/rag.ts`：AI / RAG 檢索增強問答管線
+See the `examples/` directory for the complete flagship example specs:
+- `examples/ecommerce.ts`: e-commerce order and payment fulfillment flow
+- `examples/cicd.ts`: CI/CD automated build and deployment pipeline
+- `examples/rag.ts`: AI / RAG retrieval-augmented question answering pipeline
 
-## 授權
+## License
 
 MIT
