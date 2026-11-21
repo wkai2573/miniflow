@@ -123,6 +123,49 @@ const text: Record<Lang, CicdText> = {
       cd: 'CD 持續交付與部署',
     },
   },
+  'zh-Hans': {
+    title: 'CI/CD 自动化构建与部署流水线',
+    legend: {
+      title: '流水线阶段',
+      frontend: '开发者界面',
+      backend: '自动化执行单元',
+      database: '镜像仓库',
+      external: '第三方开发协作平台',
+    },
+    nodes: {
+      git_pr: { label: 'GitHub PR', sub: 'main 分支 PR' },
+      ci_runner: { label: 'CI 执行器', sub: 'GitHub Actions' },
+      test_suite: { label: '自动化测试', sub: '单元 / 集成测试' },
+      slack_alert: { label: 'Slack 告警', sub: '#dev-alerts 频道' },
+      docker_build: { label: '构建 Docker 镜像', sub: 'Multi-stage Build' },
+      registry: { label: 'Artifact Registry', sub: 'OCI Image / Helm' },
+      deploy_staging: { label: '部署至 Staging', sub: '预发布验证环境' },
+      smoke_test: { label: '冒烟健康检查', sub: 'HTTP 探针与 E2E' },
+      deploy_prod: { label: '生产环境上线', sub: 'K8s 滚动更新' },
+      rollback: { label: '自动回滚 / 告警', sub: 'PagerDuty On-Call' },
+    },
+    tips: {
+      git_pr: '查看 Pull Request',
+      slack_alert: '前往 Slack 频道',
+      registry: '浏览容器镜像仓库',
+      deploy_prod: 'K8s 集群控制台',
+      rollback: 'PagerDuty 事件响应',
+    },
+    edges: {
+      triggerWebhook: '触发 Webhook',
+      testsPassed: '测试通过',
+      testsFailed: '测试失败中断',
+      pushImage: 'Push Image',
+      pullImage: 'Pull Image',
+      triggerVerify: '触发验证',
+      accepted: '验收通过',
+      rollback: '异常回滚',
+    },
+    frames: {
+      ci: 'CI 持续集成检验',
+      cd: 'CD 持续交付与部署',
+    },
+  },
 };
 
 /** CI/CD 自動化建置與部署流水線 */

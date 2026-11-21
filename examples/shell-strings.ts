@@ -1,7 +1,7 @@
 // 展示頁外殼的所有使用者可見文字，以語言為鍵。
 // ShellStrings 是唯一的鍵定義：任何語言缺鍵或多鍵都會在型別檢查失敗。
 // 支援語言的唯一來源：Lang 型別由它推導，所有以 Lang 為鍵的 Record 都會在新增語言時要求補齊。
-export const langs = ['en', 'zh-Hant'] as const;
+export const langs = ['en', 'zh-Hant', 'zh-Hans'] as const;
 
 export type Lang = (typeof langs)[number];
 
@@ -157,6 +157,54 @@ export const shellStrings: Record<Lang, ShellStrings> = {
       nodeClick: '攔截點擊事件：nodeId="{id}" → href="{href}" (已防止全頁跳轉)',
       logEmpty: '(尚未觸發任何 node-click 事件，請點擊圖表中帶有連結的節點)',
       logCleared: '(紀錄已清空)',
+    },
+  },
+  'zh-Hans': {
+    titleSuffix: ' - miniflow 示例',
+    ogIndexTitle: 'miniflow 流程图',
+    defaultDesc: '轻量、易嵌入的简易流程图：以网格描述节点，输出 SVG 或 Web Component。',
+    indexTitle: 'miniflow 示例图集 Showcase',
+    navIndex: '总览 Showcase',
+    navEcommerce: '🛒 电商订单履约',
+    navCicd: '🚀 CI/CD 自动化流水线',
+    navRag: '🤖 AI / RAG 问答流水线',
+    navElement: '⚡ Web Component 交互体验',
+    demoLink: '⚡ 查看 Web Component 交互 Demo',
+    githubRepo: 'GitHub 仓库',
+    openStandalone: '打开独立页面',
+    viewSvg: '查看 SVG',
+    flows: {
+      ecommerce: {
+        title: '电商订单与履约流程',
+        desc: '展示购物车、库存判断、第三方支付扣款、跨行订单数据库与发货通知。',
+      },
+      cicd: {
+        title: 'CI/CD 自动化构建与部署流水线',
+        desc: '展示 Pull Request 触发、测试判断分支、Docker 构建、制品库、预发布与生产环境部署。',
+      },
+      rag: {
+        title: 'AI / RAG 智能问答与检索流水线',
+        desc: '展示 Web Chat 对话、API Gateway、意图路由、向量知识库检索、LLM 推理与流式输出。',
+      },
+    },
+    demo: {
+      title: 'miniflow Web Component 交互演示',
+      ogTitle: 'miniflow Web Component 交互 Demo',
+      desc: '动态切换 <flow-diagram> 组件规格，并演示 node-click 事件拦截机制。',
+      controlsLabel: '切换流程规格：',
+      tabEcommerce: '🛒 电商订单履约',
+      tabCicd: '🚀 CI/CD 自动化流水线',
+      tabRag: '🤖 AI / RAG 检索问答',
+      logHeader: 'Event Log (点击上方带有链接的节点测试拦截)',
+      clearLog: '清空日志',
+    },
+    runtime: {
+      toastPrefix: '📌 点击节点：',
+      toastSuffix: '（示例已禁用外部跳转）',
+      specChange: '切换为 {title}',
+      nodeClick: '拦截点击事件：nodeId="{id}" → href="{href}" (已阻止整页跳转)',
+      logEmpty: '(尚未触发任何 node-click 事件，请点击图表中带有链接的节点)',
+      logCleared: '(日志已清空)',
     },
   },
 };

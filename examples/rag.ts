@@ -117,6 +117,47 @@ const text: Record<Lang, RagText> = {
       inference: '03 模型推理與串流輸出',
     },
   },
+  'zh-Hans': {
+    title: 'AI / RAG 智能问答与检索流水线',
+    legend: {
+      title: '架构图例',
+      frontend: '用户交互端',
+      backend: '逻辑处理服务',
+      database: '向量与缓存存储',
+      external: '大语言模型 API',
+    },
+    nodes: {
+      chat_ui: { label: 'Web 对话窗口', sub: 'Next.js / React' },
+      api_gw: { label: 'API Gateway', sub: 'JWT 鉴权与限流' },
+      intent_router: { label: '意图路由分析', sub: 'Function Calling' },
+      embed_svc: { label: '向量特征提取', sub: 'Text Embeddings' },
+      vector_db: { label: '知识库向量库', sub: 'pgvector / Qdrant' },
+      llm_core: { label: 'LLM 推理引擎', sub: 'Gemini 2.5 Flash' },
+      redis_cache: { label: '语义问答缓存', sub: 'Redis Cluster' },
+      stream_client: { label: '流式响应接收', sub: 'SSE 打字机效果' },
+    },
+    tips: {
+      chat_ui: '前往对话界面',
+      vector_db: '查看向量索引状态',
+      llm_core: 'Google AI Studio',
+      stream_client: '流式调试监听',
+    },
+    edges: {
+      userQuestion: '用户提问',
+      generalChat: '通用对话',
+      needDomainKnowledge: '需要领域知识',
+      cosineSearch: 'Cosine 相似检索',
+      topKContext: 'Top-K 参考上下文',
+      writeCache: '写入缓存',
+      sseChunk: 'SSE 流式 Chunk',
+      cacheHit: '缓存命中直接返回',
+    },
+    frames: {
+      intake: '01 请求接入与意图分析',
+      retrieval: '02 向量知识库检索 (RAG)',
+      inference: '03 模型推理与流式输出',
+    },
+  },
 };
 
 /** AI / RAG 智慧問答與檢索管線 */

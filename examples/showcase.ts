@@ -15,9 +15,14 @@ export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
   rag: createRag(lang),
 });
 
-// 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/
-export const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/' };
-const thumbFile: Record<Lang, string> = { en: 'thumb.webp', 'zh-Hant': 'thumb.zh-TW.webp' };
+// 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/，簡中在 zh-CN/
+export const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/', 'zh-Hans': 'zh-CN/' };
+// 簡中沿用英文縮圖，不另做簡體縮圖
+const thumbFile: Record<Lang, string> = {
+  en: 'thumb.webp',
+  'zh-Hant': 'thumb.zh-TW.webp',
+  'zh-Hans': 'thumb.webp',
+};
 
 // 從某語言目錄回到輸出根目錄的相對前綴
 const rootPrefix = (lang: Lang) => '../'.repeat(langDir[lang].split('/').length - 1);

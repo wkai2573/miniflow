@@ -18,6 +18,7 @@ const langOf = (path: string) => langs.find((lang) => inLang(path, lang));
 const pagesOf = (lang: Lang) => pages.filter((p) => inLang(p, lang));
 const enPages = pagesOf('en');
 const zhPages = pagesOf('zh-Hant');
+const hansPages = pagesOf('zh-Hans');
 
 const CJK = /[㐀-鿿]/;
 // 移除流程圖與內嵌腳本的內容，只留頁面外殼
@@ -85,6 +86,12 @@ describe('buildShowcase 語言標示與社群預覽', () => {
     }
   });
 
+  test('簡中頁的 og:image 沿用英文縮圖，路徑隨目錄深度計算', () => {
+    for (const p of hansPages) {
+      expect(metaContent(files[p]!, 'property', 'og:image')).toBe('../thumb.webp');
+    }
+  });
+
   test('英文頁面整頁（含流程圖、內嵌腳本與規格）不含繁中字串', () => {
     for (const p of enPages) expect(files[p]).not.toMatch(CJK);
   });
@@ -103,6 +110,59 @@ describe('buildShowcase 語言標示與社群預覽', () => {
     expect(html).toContain('開啟獨立頁面');
     expect(files[`${langDir['zh-Hant']}demo-element.html`]).toContain('清空紀錄');
     expect(files[`${langDir['zh-Hant']}demo-element.html`]).toContain('攔截點擊事件：nodeId=');
+  });
+});
+
+describe('buildShowcase 簡體中文頁面', () => {
+  const hans = (name: string) => files[`${langDir['zh-Hans']}${name}`]!;
+  const hant = (name: string) => files[`${langDir['zh-Hant']}${name}`]!;
+  // 簡體字專用字形，繁體頁面不應出現
+  const simplifiedOnly = /[览图个们发线节络点户务库区这构测试开关务据]/;
+
+  test('簡中頁面 lang 為 zh-Hans，並有簡體的標題、描述與社群預覽標籤', () => {
+    const html = hans('index.html');
+    expect(html).toContain('<html lang="zh-Hans">');
+    expect(html).toContain('<title>miniflow 示例图集 Showcase - miniflow 示例</title>');
+    expect(metaContent(html, 'name', 'description')).toBe(
+      '轻量、易嵌入的简易流程图：以网格描述节点，输出 SVG 或 Web Component。',
+    );
+    expect(metaContent(html, 'property', 'og:title')).toBe('miniflow 流程图');
+    expect(metaContent(html, 'property', 'og:description')).toContain('节点');
+  });
+
+  test('導覽、按鈕、提示氣泡與事件紀錄是簡體', () => {
+    const demo = hans('demo-element.html');
+    expect(hans('index.html')).toContain('打开独立页面');
+    expect(demo).toContain('清空日志');
+    expect(demo).toContain('拦截点击事件：nodeId=');
+    expect(demo).toContain('点击节点：');
+    expect(demo).toContain('🛒 电商订单履约');
+  });
+
+  test('互動頁內嵌三份簡體規格', () => {
+    const demo = hans('demo-element.html');
+    expect(demo).toContain('购物车');
+    expect(demo).toContain('流水线阶段');
+    expect(demo).toContain('架构图例');
+  });
+
+  test.each(['ecommerce', 'cicd', 'rag'])('%s 的簡體 SVG 是簡體且與繁體不同', (key) => {
+    const svg = hans(`${key}.svg`);
+    expect(svg).toMatch(simplifiedOnly);
+    expect(svg).not.toBe(hant(`${key}.svg`));
+  });
+
+  test('簡體頁面文字與繁體頁面的對應文字不同', () => {
+    for (const name of ['index.html', 'ecommerce.html', 'cicd.html', 'rag.html', 'demo-element.html']) {
+      expect(stripSvgAndScript(hans(name))).not.toBe(stripSvgAndScript(hant(name)));
+    }
+    expect(stripSvgAndScript(hans('index.html'))).toMatch(simplifiedOnly);
+  });
+
+  test('簡體用詞與詞彙表的簡體對照一致', () => {
+    // 詞彙表：節點→节点、連線→连线、網格單元→网格单元
+    expect(hans('index.html')).toContain('以网格描述节点');
+    expect(hans('demo-element.html')).toContain('点击节点');
   });
 });
 

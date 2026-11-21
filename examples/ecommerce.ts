@@ -126,6 +126,50 @@ const text: Record<Lang, EcommerceText> = {
       shipping: '03 出貨與追蹤',
     },
   },
+  'zh-Hans': {
+    title: '电商订单与履约流程',
+    legend: {
+      title: '组件类型',
+      frontend: '客户端界面',
+      backend: '核心服务',
+      database: '数据存储',
+      external: '外部服务 / 第三方',
+    },
+    nodes: {
+      cart: { label: '购物车', sub: 'Web / App' },
+      checkout: { label: '结算收银台', sub: '填写收货信息' },
+      check_stock: { label: '检查库存', sub: '实时锁定库存' },
+      restock_alert: { label: '库存不足通知', sub: '发送补货通知' },
+      pay_service: { label: '创建支付单', sub: '计算优惠与运费' },
+      stripe: { label: '支付宝 / Stripe', sub: '信用卡 / 移动支付' },
+      order_db: { label: '订单库存库', sub: 'PostgreSQL' },
+      logistics: { label: '物流托运系统', sub: '顺丰速运' },
+      cust_notify: { label: '发货与通知服务', sub: 'LINE / Email 通知' },
+    },
+    tips: {
+      cart: '前往购物车',
+      checkout: '前往结算',
+      restock_alert: '查看补货清单',
+      stripe: '第三方支付网关',
+      order_db: '管理后台：订单数据库',
+      logistics: '追踪运单号',
+    },
+    edges: {
+      submitOrder: '提交订单',
+      stockOk: '库存充足',
+      stockLow: '库存不足',
+      charge: '发起扣款',
+      paid: '支付完成 Webhook',
+      createWaybill: '生成运单',
+      updateStatus: '更新状态',
+      returnWaybill: '回传单号',
+    },
+    frames: {
+      checkout: '01 结算阶段',
+      fulfillment: '02 履约与支付核心',
+      shipping: '03 发货与追踪',
+    },
+  },
 };
 
 /** 電商訂單與履約流程 */
