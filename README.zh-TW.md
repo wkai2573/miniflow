@@ -139,6 +139,23 @@ bun run example     # 在 examples/out 產生範例頁
 - `examples/cicd.ts`：CI/CD 自動化建置與部署流水線
 - `examples/rag.ts`：AI / RAG 檢索增強問答管線
 
+### 重新產生社群預覽縮圖
+
+`examples/thumb.webp`（英文）與 `examples/thumb.zh-TW.webp`（繁體中文）是 800x500 的 `og:image` 檔案。它們是手動一次性產生，不屬於建置腳本，範例改版時要重做。需要 Microsoft Edge、ImageMagick 與 `cwebp`。
+
+```sh
+bun run example   # 先建置頁面
+# 1. 以 1400x700 對 RAG 頁面截圖（中文版請改用 zh-TW/rag.html）
+msedge --headless=new --hide-scrollbars --window-size=1400,700 \
+  --screenshot=rag-full.png file:///<repo>/examples/out/zh-TW/rag.html
+# 2. 裁切流程圖卡片、縮放到寬度 800、在白底上補成 800x500，再轉成 webp
+magick rag-full.png -crop 1272x369+66+197 +repage -resize 800x \
+  -background white -gravity center -extent 800x500 rag-thumb.png
+cwebp -q 80 rag-thumb.png -o examples/thumb.zh-TW.webp   # 英文版：examples/thumb.webp
+```
+
+頁面版面若有變動，請調整裁切位移，確保整張流程圖與圖例都在畫面內，且沒有標籤被裁切或互相重疊。
+
 ## 授權
 
 MIT
