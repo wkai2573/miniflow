@@ -30,6 +30,12 @@ const thumbFile: Record<Lang, string> = {
 // 從某語言目錄回到輸出根目錄的相對前綴
 const rootPrefix = (lang: Lang) => '../'.repeat(langDir[lang].split('/').length - 1);
 
+// 三個語言版本同一頁的 hreflang 替代連結（相對路徑，含自己），放在內容頁的 <head>
+const alternateLinks = (file: string) =>
+  langs
+    .map((l) => `<link rel="alternate" hreflang="${l}" href="../${langDir[l]}${file}">`)
+    .join('\n  ');
+
 const fmtScript = `function fmt(t, v) { return Object.keys(v).reduce((r, k) => r.split('{' + k + '}').join(v[k]), t); }`;
 
 // 節點點擊提示氣泡，流程頁與互動頁共用
@@ -77,12 +83,14 @@ const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u0
 // 共通頁面範本
 const page = ({
   lang,
+  file,
   title,
   subtitle,
   activeKey,
   body,
 }: {
   lang: Lang;
+  file: string;
   title: string;
   subtitle?: string;
   activeKey?: string;
@@ -100,6 +108,7 @@ const page = ({
   <meta name="description" content="${desc}">
   <meta property="og:description" content="${desc}">
   <meta property="og:image" content="${rootPrefix(lang)}${thumbFile[lang]}">
+  ${alternateLinks(file)}
   <style>
     body {
       margin: 0;
@@ -231,6 +240,7 @@ const demoPage = (lang: Lang, specsJson: string) => {
   <meta name="description" content="${d.desc}">
   <meta property="og:description" content="${d.desc}">
   <meta property="og:image" content="${rootPrefix(lang)}${thumbFile[lang]}">
+  ${alternateLinks('demo-element.html')}
   <style>
     body {
       margin: 0;
@@ -550,6 +560,7 @@ export function buildShowcase(): Record<string, string> {
 
       files[`${dir}${key}.html`] = page({
         lang,
+        file: `${key}.html`,
         title,
         subtitle: desc,
         activeKey: key,
@@ -588,6 +599,7 @@ export function buildShowcase(): Record<string, string> {
 
     files[`${dir}index.html`] = page({
       lang,
+      file: 'index.html',
       title: s.indexTitle,
       subtitle: s.defaultDesc,
       activeKey: 'index',

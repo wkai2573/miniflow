@@ -24,8 +24,9 @@ const hansPages = pagesOf('zh-Hans');
 const CJK = /[㐀-鿿]/;
 // 移除流程圖與內嵌腳本的內容，只留頁面外殼
 const stripSvgAndScript = (html: string) => html.replace(/<(svg|script)[\s\S]*?<\/\1>/g, '');
+// 畫面上的連結：不含 <head>（語言替代連結在那裡）
 const internalHrefs = (html: string) =>
-  [...stripSvgAndScript(html).matchAll(/href="([^"]+)"/g)]
+  [...stripSvgAndScript(html).replace(/<head>[\s\S]*?<\/head>/, '').matchAll(/href="([^"]+)"/g)]
     .map((m) => m[1]!)
     .filter((h) => !/^https?:\/\//.test(h));
 // 指向目錄的連結（結尾斜線）解析成該目錄的 index.html
@@ -306,6 +307,34 @@ describe('buildShowcase 根目錄導向行為', () => {
 
   test('每個內容頁都不含導向腳本，直接進入語言目錄的網址不被導向', () => {
     for (const p of pages) expect(files[p]).not.toContain('location.replace');
+  });
+});
+
+describe('buildShowcase 內容頁的語言替代連結', () => {
+  const alternates = (html: string) =>
+    Object.fromEntries(
+      [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((m) => [m[1]!, m[2]!]),
+    );
+  const head = (html: string) => /<head>([\s\S]*?)<\/head>/.exec(html)![1]!;
+
+  test('每個內容頁都有三個語言同一頁的替代連結，且指向存在的同名檔案', () => {
+    for (const path of pages) {
+      const found = alternates(head(files[path]!));
+      expect(Object.keys(found).sort()).toEqual([...langs].sort());
+      for (const lang of langs) {
+        const target = posix.join(posix.dirname(path), found[lang]!);
+        expect(paths).toContain(target);
+        expect(target).toBe(`${langDir[lang]}${posix.basename(path)}`);
+      }
+    }
+  });
+
+  test('替代連結只在 head，畫面上沒有跨語言連結', () => {
+    for (const path of pages) {
+      const body = files[path]!.replace(/<head>[\s\S]*?<\/head>/, '');
+      expect(body).not.toContain('hreflang');
+      expect(body).not.toContain('rel="alternate"');
+    }
   });
 });
 
