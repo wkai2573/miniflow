@@ -1,6 +1,6 @@
 # miniflow
 
-[English](README.md) | **繁體中文**
+[English](README.md) | **繁體中文** | [简体中文](README.zh-CN.md)
 
 輕量、好嵌入的簡易流程圖。用 JSON 描述節點在第幾列第幾欄、誰連到誰，輸出一段 SVG，或直接放一個 `<flow-diagram>` 標籤。
 

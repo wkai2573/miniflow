@@ -1,6 +1,6 @@
 # miniflow
 
-**English** | [繁體中文](README.zh-TW.md)
+**English** | [繁體中文](README.zh-TW.md) | [简体中文](README.zh-CN.md)
 
 A lightweight, easy-to-embed flowchart library. Describe in JSON which grid row and column each node sits in and what connects to what, and get back an SVG, or drop in a single `<flow-diagram>` tag.
 
