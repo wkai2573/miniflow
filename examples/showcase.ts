@@ -4,6 +4,7 @@ import { render, type FlowSpec } from '../src';
 import { createEcommerce } from './ecommerce';
 import { createCicd } from './cicd';
 import { createRag } from './rag';
+import { detectLang } from './detect-lang';
 import { langs, shellStrings, type Lang } from './shell-strings';
 
 type FlowKey = 'ecommerce' | 'cicd' | 'rag';
@@ -15,8 +16,10 @@ export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
   rag: createRag(lang),
 });
 
-// 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/，簡中在 zh-CN/
-export const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/', 'zh-Hans': 'zh-CN/' };
+// 語言對應的輸出子目錄，三個語言對等，根目錄只放導向頁
+export const langDir: Record<Lang, string> = { en: 'en/', 'zh-Hant': 'zh-TW/', 'zh-Hans': 'zh-CN/' };
+// 導向頁選單上各語言自己的名稱
+const langName: Record<Lang, string> = { en: 'English', 'zh-Hant': '繁體中文', 'zh-Hans': '简体中文' };
 // 簡中沿用英文縮圖，不另做簡體縮圖
 const thumbFile: Record<Lang, string> = {
   en: 'thumb.webp',
@@ -466,8 +469,73 @@ const demoPage = (lang: Lang, specsJson: string) => {
 </html>`;
 };
 
+// 根目錄導向頁：頁面本身就是極簡語言選單，內嵌腳本依瀏覽器偏好語言導向對應語言目錄
+const redirectPage = () => {
+  const s = shellStrings.en;
+  const links = langs
+    .map((lang) => `<a href="${langDir[lang]}" lang="${lang}" hreflang="${lang}">${langName[lang]}</a>`)
+    .join('\n    ');
+  const alternates = [
+    ...langs.map((lang) => `<link rel="alternate" hreflang="${lang}" href="${langDir[lang]}">`),
+    `<link rel="alternate" hreflang="x-default" href="${langDir.en}">`,
+  ].join('\n  ');
+  // 導向目標由目前網址路徑計算：以所在目錄為基準，缺結尾斜線時補上，不寫死部署前綴
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>miniflow</title>
+  <meta property="og:title" content="${s.ogIndexTitle}">
+  <meta name="description" content="${s.defaultDesc}">
+  <meta property="og:description" content="${s.defaultDesc}">
+  <meta property="og:image" content="thumb.webp">
+  ${alternates}
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "Noto Sans SC", sans-serif;
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      color: #0f172a;
+    }
+    h1 { margin: 0 0 20px; font-size: 24px; text-align: center; }
+    nav { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    nav a {
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #475569;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+    }
+    nav a:hover { background: #f8fafc; color: #0f172a; border-color: #94a3b8; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>miniflow</h1>
+  <nav>
+    ${links}
+  </nav>
+</main>
+<script>
+  ${detectLang.toString()}
+  const dirs = ${scriptJson(langDir)};
+  const preferred = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+  const base = location.pathname.replace(/index\\.html$/, '').replace(/\\/?$/, '/');
+  location.replace(base + dirs[detectLang(preferred.filter(Boolean))]);
+</script>
+</body>
+</html>`;
+};
+
 export function buildShowcase(): Record<string, string> {
-  const files: Record<string, string> = {};
+  const files: Record<string, string> = { 'index.html': redirectPage() };
 
   for (const lang of langs) {
     const s = shellStrings[lang];

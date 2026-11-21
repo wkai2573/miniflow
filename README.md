@@ -145,9 +145,9 @@ See the `examples/` directory for the complete flagship example specs:
 
 ```sh
 bun run example   # build the pages first
-# 1. Screenshot the RAG page at 1400x700 (use zh-TW/rag.html for the Chinese one)
+# 1. Screenshot the RAG page at 1400x700 (use zh-TW/rag.html or zh-CN/rag.html for the Chinese ones)
 msedge --headless=new --hide-scrollbars --window-size=1400,700 \
-  --screenshot=rag-full.png file:///<repo>/examples/out/rag.html
+  --screenshot=rag-full.png file:///<repo>/examples/out/en/rag.html
 # 2. Crop the diagram card, scale to width 800, pad to 800x500 on white, encode as webp
 magick rag-full.png -crop 1272x369+66+197 +repage -resize 800x \
   -background white -gravity center -extent 800x500 rag-thumb.png

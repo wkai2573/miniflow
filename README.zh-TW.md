@@ -145,7 +145,7 @@ bun run example     # 在 examples/out 產生範例頁
 
 ```sh
 bun run example   # 先建置頁面
-# 1. 以 1400x700 對 RAG 頁面截圖（中文版請改用 zh-TW/rag.html）
+# 1. 以 1400x700 對 RAG 頁面截圖（中文版請改用 zh-TW/rag.html 或 zh-CN/rag.html）
 msedge --headless=new --hide-scrollbars --window-size=1400,700 \
   --screenshot=rag-full.png file:///<repo>/examples/out/zh-TW/rag.html
 # 2. 裁切流程圖卡片、縮放到寬度 800、在白底上補成 800x500，再轉成 webp
