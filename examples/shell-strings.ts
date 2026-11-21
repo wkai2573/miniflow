@@ -40,8 +40,6 @@ export interface ShellStrings {
   githubRepo: string;
   openStandalone: string;
   viewSvg: string;
-  /** 切換連結上顯示的「另一個語言」名稱 */
-  otherLanguageName: string;
   flows: {
     ecommerce: FlowStrings;
     cicd: FlowStrings;
@@ -78,7 +76,6 @@ export const shellStrings: Record<Lang, ShellStrings> = {
     githubRepo: 'GitHub repository',
     openStandalone: 'Open standalone page',
     viewSvg: 'View SVG',
-    otherLanguageName: '繁體中文',
     flows: {
       ecommerce: {
         title: 'E-commerce Order and Fulfillment',
@@ -128,7 +125,6 @@ export const shellStrings: Record<Lang, ShellStrings> = {
     githubRepo: 'GitHub 倉庫',
     openStandalone: '開啟獨立頁面',
     viewSvg: '檢視 SVG',
-    otherLanguageName: 'English',
     flows: {
       ecommerce: {
         title: '電商訂單與履約流程',

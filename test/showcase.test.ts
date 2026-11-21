@@ -85,11 +85,8 @@ describe('buildShowcase 語言標示與社群預覽', () => {
     }
   });
 
-  test('英文頁面整頁（含流程圖、內嵌腳本與規格）不含繁中字串，語言切換連結的名稱除外', () => {
-    for (const p of enPages) {
-      const whole = files[p]!.replace(/<a [^>]*hreflang="zh-TW"[^>]*>[^<]*<\/a>/, '');
-      expect(whole).not.toMatch(CJK);
-    }
+  test('英文頁面整頁（含流程圖、內嵌腳本與規格）不含繁中字串', () => {
+    for (const p of enPages) expect(files[p]).not.toMatch(CJK);
   });
 
   test('英文 SVG 不含繁中字串', () => {
@@ -120,26 +117,13 @@ describe('buildShowcase 站內導覽', () => {
     }
   });
 
-  test('每頁都有連到另一個語言同一頁的連結', () => {
-    for (const path of pages) {
-      const here = langOf(path)!;
-      const others = langs.filter((l) => l !== here);
-      const targets = internalHrefs(files[path]!).map((href) => posix.join(dirOf(path), href));
-      const sameName = posix.basename(path);
-      expect(targets.filter((t) => others.some((l) => t === `${langDir[l]}${sameName}`)).length).toBe(1);
-    }
-  });
-
-  test('站內導覽連結不跨語言', () => {
+  test('站內連結不跨語言，頁面沒有語言切換連結', () => {
     for (const path of pages) {
       const dir = posix.dirname(path);
       const crossing = internalHrefs(files[path]!)
         .map((href) => posix.join(dir, href))
         .filter((target) => langOf(target) !== langOf(path));
-      // 唯一跨語言的連結是切換連結，且指向同一頁
-      const sameName = posix.basename(path);
-      expect(crossing.length).toBe(1);
-      expect(posix.basename(crossing[0]!)).toBe(sameName);
+      expect(crossing).toEqual([]);
     }
   });
 });

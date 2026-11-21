@@ -18,17 +18,9 @@ export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
 // 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/
 export const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/' };
 const thumbFile: Record<Lang, string> = { en: 'thumb.webp', 'zh-Hant': 'thumb.zh-TW.webp' };
-// 切換連結的 hreflang 屬性值
-const hreflang: Record<Lang, string> = { en: 'en', 'zh-Hant': 'zh-TW' };
-// 切換連結指向的語言。每個語言都必須列出，新增語言時由型別檢查擋下漏列
-const switchTarget: Record<Lang, Lang> = { en: 'zh-Hant', 'zh-Hant': 'en' };
 
 // 從某語言目錄回到輸出根目錄的相對前綴
 const rootPrefix = (lang: Lang) => '../'.repeat(langDir[lang].split('/').length - 1);
-const otherLang = (lang: Lang): Lang => switchTarget[lang];
-// 目前語言頁面連到另一個語言同一頁的相對路徑
-const switchHref = (lang: Lang, file: string) =>
-  `${rootPrefix(lang)}${langDir[otherLang(lang)]}${file}`;
 
 const fmtScript = `function fmt(t, v) { return Object.keys(v).reduce((r, k) => r.split('{' + k + '}').join(v[k]), t); }`;
 
@@ -58,9 +50,6 @@ const githubLink = (label: string) => `<a href="https://github.com/wkai2573/mini
         ${label} &nearr;
       </a>`;
 
-const switchLink = (lang: Lang, file: string) =>
-  `<a href="${switchHref(lang, file)}" hreflang="${hreflang[otherLang(lang)]}" lang="${otherLang(lang)}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; text-decoration: none; font-weight: 500; font-size: 12px;">${shellStrings[lang].otherLanguageName}</a>`;
-
 const navHtml = (lang: Lang, activeKey?: string) => {
   const s = shellStrings[lang];
   const item = (key: string, href: string, label: string) =>
@@ -80,14 +69,12 @@ const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u0
 // 共通頁面範本
 const page = ({
   lang,
-  file,
   title,
   subtitle,
   activeKey,
   body,
 }: {
   lang: Lang;
-  file: string;
   title: string;
   subtitle?: string;
   activeKey?: string;
@@ -196,7 +183,6 @@ const page = ({
       <a href="demo-element.html" style="color: #0284c7; text-decoration: none; font-weight: 500;">
         ${s.demoLink} &rarr;
       </a>
-      ${switchLink(lang, file)}
       ${githubLink(s.githubRepo)}
     </div>
   </header>
@@ -381,7 +367,6 @@ const demoPage = (lang: Lang, specsJson: string) => {
       <div class="desc">${d.desc.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
     </div>
     <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
-      ${switchLink(lang, 'demo-element.html')}
       ${githubLink(s.githubRepo)}
     </div>
   </header>
@@ -492,7 +477,6 @@ export function buildShowcase(): Record<string, string> {
 
       files[`${dir}${key}.html`] = page({
         lang,
-        file: `${key}.html`,
         title,
         subtitle: desc,
         activeKey: key,
@@ -531,7 +515,6 @@ export function buildShowcase(): Record<string, string> {
 
     files[`${dir}index.html`] = page({
       lang,
-      file: 'index.html',
       title: s.indexTitle,
       subtitle: s.defaultDesc,
       activeKey: 'index',
