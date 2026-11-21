@@ -5,8 +5,8 @@ import type { FlowSpec } from '../src';
 import { buildShowcase } from '../examples/showcase';
 import { createEcommerce } from '../examples/ecommerce';
 import type { Lang } from '../examples/shell-strings';
-import { cicd } from '../examples/cicd';
-import { rag } from '../examples/rag';
+import { createCicd } from '../examples/cicd';
+import { createRag } from '../examples/rag';
 
 const files = buildShowcase();
 const paths = Object.keys(files);
@@ -81,17 +81,17 @@ describe('buildShowcase 語言標示與社群預覽', () => {
     }
   });
 
-  test('英文頁面的外殼不含繁中字串，連結語言名稱以外', () => {
+  test('英文頁面整頁（含流程圖、內嵌腳本與規格）不含繁中字串，語言切換連結的名稱除外', () => {
     for (const p of enPages) {
-      const shell = stripSvgAndScript(files[p]!).replace(/<a [^>]*hreflang="zh-TW"[^>]*>[^<]*<\/a>/, '');
-      expect(shell).not.toMatch(CJK);
+      const whole = files[p]!.replace(/<a [^>]*hreflang="zh-TW"[^>]*>[^<]*<\/a>/, '');
+      expect(whole).not.toMatch(CJK);
     }
   });
 
-  test('英文互動頁在瀏覽器內執行的字串不含繁中', () => {
-    const script = files['demo-element.html']!.match(/<script>[\s\S]*?<\/script>/g)!.join('\n');
-    // 規格 JSON 在後續票券才會依語言輸出，這裡先排除
-    expect(script.replace(/const specs = .*;\n/, '')).not.toMatch(CJK);
+  test('英文 SVG 不含繁中字串', () => {
+    for (const p of paths.filter((p) => p.endsWith('.svg') && !p.startsWith('zh-TW/'))) {
+      expect(files[p]).not.toMatch(CJK);
+    }
   });
 
   test('繁中頁面保留原本的繁中內容', () => {
@@ -149,32 +149,36 @@ const structure = (spec: FlowSpec) => ({
   layout: spec.layout,
 });
 
+const factories = [
+  ['電商', createEcommerce],
+  ['CI/CD', createCicd],
+  ['RAG', createRag],
+] as const;
+
 describe('範例規格', () => {
-  test.each(langs)('電商範例 %s 能通過 render 驗證而不拋錯', (lang) => {
-    expect(() => render(createEcommerce(lang))).not.toThrow();
-  });
+  describe.each(factories)('%s範例', (_name, create) => {
+    test.each(langs)('%s 能通過 render 驗證而不拋錯', (lang) => {
+      expect(() => render(create(lang))).not.toThrow();
+    });
 
-  test.each([
-    ['cicd', cicd],
-    ['rag', rag],
-  ])('%s 能通過 render 驗證而不拋錯', (_name, spec) => {
-    expect(() => render(spec)).not.toThrow();
-  });
+    test('兩個語言的節點 id、格位與連線集合完全一致', () => {
+      expect(structure(create('en'))).toEqual(structure(create('zh-Hant')));
+    });
 
-  test('電商範例兩個語言的節點 id、格位與連線集合完全一致', () => {
-    expect(structure(createEcommerce('en'))).toEqual(structure(createEcommerce('zh-Hant')));
-  });
-
-  test('英文電商範例的所有可見文字都是英文，繁中電商範例維持原文', () => {
-    const visible = (spec: FlowSpec) =>
-      JSON.stringify([
+    test('英文版的所有可見文字都是英文', () => {
+      const spec = create('en');
+      const visible = JSON.stringify([
         spec.title,
         spec.legend,
         spec.nodes.map((n) => [n.label, n.sub, n.title]),
         spec.edges?.map((e) => e.label),
         spec.frames?.map((f) => f.label),
       ]);
-    expect(visible(createEcommerce('en'))).not.toMatch(CJK);
+      expect(visible).not.toMatch(CJK);
+    });
+  });
+
+  test('繁中電商範例維持原文', () => {
     const zh = createEcommerce('zh-Hant');
     expect(zh.title).toBe('電商訂單與履約流程');
     expect(zh.nodes[1]).toMatchObject({ label: '結帳收銀台', sub: '填寫收件資訊', title: '前往結帳' });
@@ -182,13 +186,42 @@ describe('範例規格', () => {
     expect(zh.frames?.[0]?.label).toBe('01 結帳階段');
   });
 
-  test('各語言頁面與互動頁內嵌的電商圖使用該語言的文字', () => {
+  test('繁中 CI/CD 範例維持原文', () => {
+    const zh = createCicd('zh-Hant');
+    expect(zh.title).toBe('CI/CD 自動化建置與部署流水線');
+    expect((zh.legend as { title?: string }).title).toBe('流水線階段');
+    expect(zh.nodes[2]).toMatchObject({ label: '自動化測試', sub: '單元 / 整合測試' });
+    expect(zh.nodes[9]).toMatchObject({ label: '自動復原 / 告警', title: 'PagerDuty 事件回應' });
+    expect(zh.edges?.[3]?.label).toBe('測試失敗中斷');
+    expect(zh.frames?.[1]?.label).toBe('CD 持續交付與部署');
+  });
+
+  test('繁中 RAG 範例維持原文', () => {
+    const zh = createRag('zh-Hant');
+    expect(zh.title).toBe('AI / RAG 智慧問答與檢索管線');
+    expect((zh.legend as { title?: string }).title).toBe('架構圖例');
+    expect(zh.nodes[2]).toMatchObject({ label: '意圖路由分析', sub: 'Function Calling' });
+    expect(zh.nodes[7]).toMatchObject({ label: '串流回應接收', title: '串流偵錯監聽' });
+    expect(zh.edges?.[8]?.label).toBe('快取命中直接回傳');
+    expect(zh.frames?.[1]?.label).toBe('02 向量知識庫檢索 (RAG)');
+  });
+
+  test('各語言頁面與互動頁內嵌的圖使用該語言的文字', () => {
     expect(files['ecommerce.html']).toContain('E-commerce Order and Fulfillment');
     expect(files['ecommerce.svg']).toContain('Shopping cart');
     expect(files['ecommerce.svg']).toContain('Component types');
+    expect(files['cicd.svg']).toContain('Pipeline stages');
+    expect(files['cicd.html']).toContain('CI/CD Build and Deployment Pipeline');
+    expect(files['rag.svg']).toContain('Architecture legend');
+    expect(files['rag.html']).toContain('Vector embedding');
     expect(files['zh-TW/ecommerce.svg']).toContain('購物車');
     expect(files['zh-TW/ecommerce.svg']).toContain('元件類型');
+    expect(files['zh-TW/cicd.svg']).toContain('流水線階段');
+    expect(files['zh-TW/rag.svg']).toContain('架構圖例');
     expect(files['demo-element.html']).toContain('Shopping cart');
+    expect(files['demo-element.html']).toContain('Pipeline stages');
+    expect(files['demo-element.html']).toContain('Architecture legend');
     expect(files['zh-TW/demo-element.html']).toContain('購物車');
+    expect(files['zh-TW/demo-element.html']).toContain('流水線階段');
   });
 });

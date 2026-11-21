@@ -2,17 +2,17 @@
 // 檔案寫入與資源複製由 build-example.ts 負責。
 import { render, type FlowSpec } from '../src';
 import { createEcommerce } from './ecommerce';
-import { cicd } from './cicd';
-import { rag } from './rag';
+import { createCicd } from './cicd';
+import { createRag } from './rag';
 import { langs, shellStrings, type Lang } from './shell-strings';
 
 type FlowKey = 'ecommerce' | 'cicd' | 'rag';
 const flowKeys: FlowKey[] = ['ecommerce', 'cicd', 'rag'];
-// 各語言的流程規格；cicd 與 rag 尚未字典化，兩個語言暫用同一份
+// 各語言的流程規格
 export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
   ecommerce: createEcommerce(lang),
-  cicd,
-  rag,
+  cicd: createCicd(lang),
+  rag: createRag(lang),
 });
 
 // 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/
