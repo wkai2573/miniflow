@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: done
 
 # 依瀏覽器語言導向的三語展示站
 

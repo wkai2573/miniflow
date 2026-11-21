@@ -1,4 +1,4 @@
-Status: ready-for-agent
+Status: done
 
 # 多語文件與展示站
 
