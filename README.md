@@ -139,19 +139,19 @@ See the `examples/` directory for the complete flagship example specs:
 - `examples/cicd.ts`: CI/CD automated build and deployment pipeline
 - `examples/rag.ts`: AI / RAG retrieval-augmented question answering pipeline
 
-### Regenerating the social preview thumbnails
+### Regenerating the social preview thumbnail
 
-`examples/thumb.webp` (English) and `examples/thumb.zh-TW.webp` (Traditional Chinese) are the 800x500 `og:image` files. They are produced once by hand and are not part of the build script. Redo them when an example changes. Requires Microsoft Edge, ImageMagick and `cwebp`.
+`examples/thumb.webp` is the single 800x500 `og:image` file, shared by every language and by the root page, with English labels. It is produced once by hand and is not part of the build script. Redo it when an example changes. Requires Microsoft Edge, ImageMagick and `cwebp`.
 
 ```sh
 bun run example   # build the pages first
-# 1. Screenshot the RAG page at 1400x700 (use zh-TW/rag.html or zh-CN/rag.html for the Chinese ones)
+# 1. Screenshot the English RAG page at 1400x700
 msedge --headless=new --hide-scrollbars --window-size=1400,700 \
   --screenshot=rag-full.png file:///<repo>/examples/out/en/rag.html
 # 2. Crop the diagram card, scale to width 800, pad to 800x500 on white, encode as webp
 magick rag-full.png -crop 1272x369+66+197 +repage -resize 800x \
   -background white -gravity center -extent 800x500 rag-thumb.png
-cwebp -q 80 rag-thumb.png -o examples/thumb.webp   # zh-TW: examples/thumb.zh-TW.webp
+cwebp -q 80 rag-thumb.png -o examples/thumb.webp
 ```
 
 If the page layout changes, adjust the crop offsets so the whole diagram and legend stay inside the frame, and check that no label is clipped or overlapping.

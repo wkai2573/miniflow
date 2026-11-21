@@ -20,12 +20,8 @@ export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
 export const langDir: Record<Lang, string> = { en: 'en/', 'zh-Hant': 'zh-TW/', 'zh-Hans': 'zh-CN/' };
 // 導向頁選單上各語言自己的名稱
 const langName: Record<Lang, string> = { en: 'English', 'zh-Hant': '繁體中文', 'zh-Hans': '简体中文' };
-// 簡中沿用英文縮圖，不另做簡體縮圖
-const thumbFile: Record<Lang, string> = {
-  en: 'thumb.webp',
-  'zh-Hant': 'thumb.zh-TW.webp',
-  'zh-Hans': 'thumb.webp',
-};
+// 所有語言與導向頁共用同一張英文標籤的縮圖，位於輸出根目錄
+const thumbFile = 'thumb.webp';
 
 // 從某語言目錄回到輸出根目錄的相對前綴
 const rootPrefix = (lang: Lang) => '../'.repeat(langDir[lang].split('/').length - 1);
@@ -107,7 +103,7 @@ const page = ({
   <meta property="og:title" content="${activeKey === 'index' ? s.ogIndexTitle : `${title} - miniflow`}">
   <meta name="description" content="${desc}">
   <meta property="og:description" content="${desc}">
-  <meta property="og:image" content="${rootPrefix(lang)}${thumbFile[lang]}">
+  <meta property="og:image" content="${rootPrefix(lang)}${thumbFile}">
   ${alternateLinks(file)}
   <style>
     body {
@@ -239,7 +235,7 @@ const demoPage = (lang: Lang, specsJson: string) => {
   <meta property="og:title" content="${d.ogTitle}">
   <meta name="description" content="${d.desc}">
   <meta property="og:description" content="${d.desc}">
-  <meta property="og:image" content="${rootPrefix(lang)}${thumbFile[lang]}">
+  <meta property="og:image" content="${rootPrefix(lang)}${thumbFile}">
   ${alternateLinks('demo-element.html')}
   <style>
     body {
@@ -499,7 +495,7 @@ const redirectPage = () => {
   <meta property="og:title" content="${s.ogIndexTitle}">
   <meta name="description" content="${s.defaultDesc}">
   <meta property="og:description" content="${s.defaultDesc}">
-  <meta property="og:image" content="thumb.webp">
+  <meta property="og:image" content="${thumbFile}">
   ${alternates}
   <style>
     body {

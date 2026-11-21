@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { existsSync, readdirSync } from 'node:fs';
 import { posix } from 'node:path';
 import { render } from '../src/render';
 import type { FlowSpec } from '../src';
@@ -11,6 +12,7 @@ import { createRag } from '../examples/rag';
 const files = buildShowcase();
 const paths = Object.keys(files);
 const ROOT_PAGE = 'index.html';
+const SHARED_THUMB = 'thumb.webp';
 const pages = paths.filter((path) => path.endsWith('.html') && path !== ROOT_PAGE);
 // 檔案所在的語言目錄（以輸出路徑的目錄前綴比對，語言清單來自單一來源）
 const dirOf = (path: string) => path.slice(0, path.length - posix.basename(path).length);
@@ -18,8 +20,6 @@ const inLang = (path: string, lang: Lang) => dirOf(path) === langDir[lang];
 const langOf = (path: string) => langs.find((lang) => inLang(path, lang));
 const pagesOf = (lang: Lang) => pages.filter((p) => inLang(p, lang));
 const enPages = pagesOf('en');
-const zhPages = pagesOf('zh-Hant');
-const hansPages = pagesOf('zh-Hans');
 
 const CJK = /[㐀-鿿]/;
 // 移除流程圖與內嵌腳本的內容，只留頁面外殼
@@ -94,19 +94,17 @@ describe('buildShowcase 語言標示與社群預覽', () => {
     }
   });
 
-  test('英文頁 og:image 指向主縮圖，繁中頁指向帶語言後綴的縮圖', () => {
-    for (const p of enPages) {
-      expect(metaContent(files[p]!, 'property', 'og:image')).toBe('../thumb.webp');
-    }
-    for (const p of zhPages) {
-      expect(metaContent(files[p]!, 'property', 'og:image')).toBe('../thumb.zh-TW.webp');
+  test('所有頁面（含導向頁）的 og:image 都指向輸出根目錄的共用縮圖，相對路徑隨目錄深度正確', () => {
+    for (const p of paths.filter((p) => p.endsWith('.html'))) {
+      const href = metaContent(files[p]!, 'property', 'og:image')!;
+      expect(posix.join(posix.dirname(p), href)).toBe(SHARED_THUMB);
     }
   });
 
-  test('簡中頁的 og:image 沿用英文縮圖，路徑隨目錄深度計算', () => {
-    for (const p of hansPages) {
-      expect(metaContent(files[p]!, 'property', 'og:image')).toBe('../thumb.webp');
-    }
+  test('共用縮圖是建置腳本會複製的來源檔，且 examples 下只有這一張縮圖', () => {
+    const examplesDir = new URL('../examples/', import.meta.url);
+    expect(existsSync(new URL(SHARED_THUMB, examplesDir))).toBe(true);
+    expect(readdirSync(examplesDir).filter((f) => f.startsWith('thumb'))).toEqual([SHARED_THUMB]);
   });
 
   test('英文頁面整頁（含流程圖、內嵌腳本與規格）不含繁中字串', () => {
@@ -209,9 +207,8 @@ describe('buildShowcase 根目錄導向頁', () => {
   const root = files[ROOT_PAGE]!;
   const hrefs = (html: string) => [...html.matchAll(/<a [^>]*href="([^"]+)"/g)].map((m) => m[1]!);
 
-  test('導向頁是英文頁面，並指向共用縮圖', () => {
+  test('導向頁是英文頁面', () => {
     expect(root).toContain('<html lang="en">');
-    expect(metaContent(root, 'property', 'og:image')).toBe('thumb.webp');
   });
 
   test('頁面本身是語言選單：三個語言各一個連結，名稱用該語言自己的文字', () => {
