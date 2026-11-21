@@ -4,46 +4,98 @@ import { render, type FlowSpec } from '../src';
 import { ecommerce } from './ecommerce';
 import { cicd } from './cicd';
 import { rag } from './rag';
+import { langs, shellStrings, type Lang } from './shell-strings';
 
-const flows: Record<string, { spec: FlowSpec; name: string; desc: string }> = {
-  ecommerce: {
-    spec: ecommerce,
-    name: '電商訂單與履約',
-    desc: '展示購物車、庫存決策、第三方金流扣款、跨列訂單資料庫與出貨通知。',
-  },
-  cicd: {
-    spec: cicd,
-    name: 'CI/CD 自動化管線',
-    desc: '展示 Pull Request 觸發、測試決策分支、Docker 建置、製品庫、預發與正式環境部屬。',
-  },
-  rag: {
-    spec: rag,
-    name: 'AI / RAG 檢索問答',
-    desc: '展示 Web Chat 對話、API Gateway、意圖路由、向量知識庫檢索、LLM 推理與串流輸出。',
-  },
+type FlowKey = 'ecommerce' | 'cicd' | 'rag';
+const flows: Record<FlowKey, FlowSpec> = { ecommerce, cicd, rag };
+const flowKeys = Object.keys(flows) as FlowKey[];
+
+// 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/
+const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/' };
+const thumbFile: Record<Lang, string> = { en: 'thumb.webp', 'zh-Hant': 'thumb.zh-TW.webp' };
+
+// 從某語言目錄回到輸出根目錄的相對前綴
+const rootPrefix = (lang: Lang) => '../'.repeat(langDir[lang].split('/').length - 1);
+const otherLang = (lang: Lang): Lang => (lang === 'en' ? 'zh-Hant' : 'en');
+// 目前語言頁面連到另一個語言同一頁的相對路徑
+const switchHref = (lang: Lang, file: string) =>
+  `${rootPrefix(lang)}${langDir[otherLang(lang)]}${file}`;
+
+const fmtScript = `function fmt(t, v) { return Object.keys(v).reduce((r, k) => r.split('{' + k + '}').join(v[k]), t); }`;
+
+// 節點點擊提示氣泡，流程頁與互動頁共用
+const toastScript = `function showToast(label, id) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    const pin = document.createTextNode(ui.toastPrefix);
+    const strong = document.createElement('strong');
+    strong.textContent = label;
+    const suffix = document.createTextNode(' (' + id + ')' + ui.toastSuffix);
+    toast.appendChild(pin);
+    toast.appendChild(strong);
+    toast.appendChild(suffix);
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 250);
+    }, 2000);
+  }`;
+
+const githubLink = (label: string) => `<a href="https://github.com/wkai2573/miniflow" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; background: #0f172a; color: #ffffff; text-decoration: none; font-weight: 500; font-size: 12px; transition: background 0.15s ease;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        ${label} &nearr;
+      </a>`;
+
+const switchLink = (lang: Lang, file: string) =>
+  `<a href="${switchHref(lang, file)}" hreflang="${otherLang(lang) === 'en' ? 'en' : 'zh-TW'}" lang="${otherLang(lang)}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; text-decoration: none; font-weight: 500; font-size: 12px;">${shellStrings[lang].otherLanguageName}</a>`;
+
+const navHtml = (lang: Lang, activeKey?: string) => {
+  const s = shellStrings[lang];
+  const item = (key: string, href: string, label: string) =>
+    `<a href="${href}" class="${activeKey === key ? 'active' : ''}">${label}</a>`;
+  return `<nav class="nav">
+    ${item('index', 'index.html', s.navIndex)}
+    ${item('ecommerce', 'ecommerce.html', s.navEcommerce)}
+    ${item('cicd', 'cicd.html', s.navCicd)}
+    ${item('rag', 'rag.html', s.navRag)}
+    ${item('element', 'demo-element.html', s.navElement)}
+  </nav>`;
 };
+
+// 內嵌進 <script> 的 JSON，避免 </script> 提前結束
+const scriptJson = (value: unknown) => JSON.stringify(value).replace(/</g, '\\u003c');
 
 // 共通頁面範本
 const page = ({
+  lang,
+  file,
   title,
   subtitle,
   activeKey,
   body,
 }: {
+  lang: Lang;
+  file: string;
   title: string;
   subtitle?: string;
   activeKey?: string;
   body: string;
-}) => `<!doctype html>
-<html lang="zh-Hant">
+}) => {
+  const s = shellStrings[lang];
+  const desc = subtitle || s.defaultDesc;
+  return `<!doctype html>
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title} - miniflow 範例</title>
-  <meta property="og:title" content="${activeKey === 'index' ? 'miniflow 流程圖' : `${title} - miniflow`}">
-  <meta name="description" content="${subtitle || '輕量、好嵌入的簡易流程圖：以格狀描述節點，輸出 SVG 或 Web Component。'}">
-  <meta property="og:description" content="${subtitle || '輕量、好嵌入的簡易流程圖：以格狀描述節點，輸出 SVG 或 Web Component。'}">
-  <meta property="og:image" content="thumb.webp">
+  <title>${title}${s.titleSuffix}</title>
+  <meta property="og:title" content="${activeKey === 'index' ? s.ogIndexTitle : `${title} - miniflow`}">
+  <meta name="description" content="${desc}">
+  <meta property="og:description" content="${desc}">
+  <meta property="og:image" content="${rootPrefix(lang)}${thumbFile[lang]}">
   <style>
     body {
       margin: 0;
@@ -133,46 +185,21 @@ const page = ({
     </div>
     <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
       <a href="demo-element.html" style="color: #0284c7; text-decoration: none; font-weight: 500;">
-        ⚡ 查看 Web Component 互動 Demo &rarr;
+        ${s.demoLink} &rarr;
       </a>
-      <a href="https://github.com/wkai2573/miniflow" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; background: #0f172a; color: #ffffff; text-decoration: none; font-weight: 500; font-size: 12px; transition: background 0.15s ease;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        GitHub 倉庫 &nearr;
-      </a>
+      ${switchLink(lang, file)}
+      ${githubLink(s.githubRepo)}
     </div>
   </header>
-  <nav class="nav">
-    <a href="index.html" class="${activeKey === 'index' ? 'active' : ''}">總覽 Showcase</a>
-    <a href="ecommerce.html" class="${activeKey === 'ecommerce' ? 'active' : ''}">🛒 電商訂單履約</a>
-    <a href="cicd.html" class="${activeKey === 'cicd' ? 'active' : ''}">🚀 CI/CD 自動化管線</a>
-    <a href="rag.html" class="${activeKey === 'rag' ? 'active' : ''}">🤖 AI / RAG 問答管線</a>
-    <a href="demo-element.html" class="${activeKey === 'element' ? 'active' : ''}">⚡ Web Component 互動體驗</a>
-  </nav>
+  ${navHtml(lang, activeKey)}
   <div class="card">
     ${body}
   </div>
 </main>
 <div class="toast-container" id="toast-container"></div>
 <script>
-  function showToast(label, id) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    const pin = document.createTextNode('📌 點擊節點：');
-    const strong = document.createElement('strong');
-    strong.textContent = label;
-    const suffix = document.createTextNode(' (' + id + ')（範例已停用外部跳轉）');
-    toast.appendChild(pin);
-    toast.appendChild(strong);
-    toast.appendChild(suffix);
-    container.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 250);
-    }, 2000);
-  }
+  const ui = ${scriptJson(s.runtime)};
+  ${toastScript}
 
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a.mf-link');
@@ -186,75 +213,21 @@ const page = ({
 </script>
 </body>
 </html>`;
+};
 
-export function buildShowcase(): Record<string, string> {
-  const files: Record<string, string> = {};
-
-  // 1. 獨立的 SVG 與 HTML
-  for (const [key, { spec, name, desc }] of Object.entries(flows)) {
-    const svg = render(spec);
-    files[`${key}.svg`] = svg;
-
-    files[`${key}.html`] = page({
-      title: spec.title || name,
-      subtitle: desc,
-      activeKey: key,
-      body: `<div style="width: 100%; min-width: 720px;">
-      ${svg.replace('<svg ', '<svg style="display:block;width:100%;height:auto" ')}
-    </div>`,
-    });
-  }
-
-  // 2. 總覽頁面 index.html
-  const indexCards = Object.entries(flows)
-    .map(([key, { spec, desc }]) => {
-      const svg = render(spec);
-      return `
-    <section style="margin-bottom: 36px;">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
-        <h2 style="margin: 0; font-size: 18px; color: #1e293b;">
-          ${spec.title}
-        </h2>
-        <div style="font-size: 13px;">
-          <a href="${key}.html" style="color: #0284c7; text-decoration: none; margin-right: 12px;">開啟獨立頁面</a>
-          <a href="${key}.svg" target="_blank" style="color: #64748b; text-decoration: none;">檢視 SVG</a>
-        </div>
-      </div>
-      <p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">${desc}</p>
-      <div class="card" style="margin-bottom: 8px;">
-        <div style="width: 100%; min-width: 680px;">
-          ${svg.replace('<svg ', '<svg style="display:block;width:100%;height:auto" ')}
-        </div>
-      </div>
-    </section>
-  `;
-    })
-    .join('\n');
-
-  files['index.html'] = page({
-    title: 'miniflow 範例圖集 Showcase',
-    subtitle: '輕量、好嵌入的簡易流程圖：以格狀描述節點，輸出 SVG 或 Web Component。',
-    activeKey: 'index',
-    body: indexCards,
-  });
-
-  // 3. Web Component 互動頁 demo-element.html (Tab 切換 + 即時 Event Log)
-const specsJson = JSON.stringify({
-  ecommerce,
-  cicd,
-  rag,
-}).replace(/</g, '\\u003c');
-
-const demoElementHtml = `<!doctype html>
-<html lang="zh-Hant">
+const demoPage = (lang: Lang, specsJson: string) => {
+  const s = shellStrings[lang];
+  const d = s.demo;
+  return `<!doctype html>
+<html lang="${lang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>miniflow Web Component 互動 Demo</title>
-  <meta property="og:title" content="miniflow Web Component 互動 Demo">
-  <meta name="description" content="動態切換 <flow-diagram> 元件規格並示範 node-click 事件攔截機制。">
-  <meta property="og:description" content="動態切換 <flow-diagram> 元件規格並示範 node-click 事件攔截機制。">
-  <meta property="og:image" content="thumb.webp">
+  <title>${d.ogTitle}</title>
+  <meta property="og:title" content="${d.ogTitle}">
+  <meta name="description" content="${d.desc}">
+  <meta property="og:description" content="${d.desc}">
+  <meta property="og:image" content="${rootPrefix(lang)}${thumbFile[lang]}">
   <style>
     body {
       margin: 0;
@@ -395,29 +368,21 @@ const demoElementHtml = `<!doctype html>
 <main>
   <header>
     <div>
-      <h1>miniflow Web Component 互動展示</h1>
-      <div class="desc">動態切換 &lt;flow-diagram&gt; 元件規格並示範 node-click 事件攔截機制。</div>
+      <h1>${d.title}</h1>
+      <div class="desc">${d.desc.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
     </div>
-    <div style="font-size: 13px;">
-      <a href="https://github.com/wkai2573/miniflow" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; background: #0f172a; color: #ffffff; text-decoration: none; font-weight: 500; font-size: 12px; transition: background 0.15s ease;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-        GitHub 倉庫 &nearr;
-      </a>
+    <div style="display: flex; align-items: center; gap: 12px; font-size: 13px;">
+      ${switchLink(lang, 'demo-element.html')}
+      ${githubLink(s.githubRepo)}
     </div>
   </header>
-  <nav class="nav">
-    <a href="index.html">總覽 Showcase</a>
-    <a href="ecommerce.html">🛒 電商訂單履約</a>
-    <a href="cicd.html">🚀 CI/CD 自動化管線</a>
-    <a href="rag.html">🤖 AI / RAG 問答管線</a>
-    <a href="demo-element.html" class="active">⚡ Web Component 互動體驗</a>
-  </nav>
+  ${navHtml(lang, 'element')}
 
   <div class="controls">
-    <span style="font-size: 14px; font-weight: 600; color: #475569;">切換流程規格：</span>
-    <button class="tab-btn active" data-flow="ecommerce">🛒 電商訂單履約</button>
-    <button class="tab-btn" data-flow="cicd">🚀 CI/CD 自動化管線</button>
-    <button class="tab-btn" data-flow="rag">🤖 AI / RAG 檢索問答</button>
+    <span style="font-size: 14px; font-weight: 600; color: #475569;">${d.controlsLabel}</span>
+    <button class="tab-btn active" data-flow="ecommerce">${d.tabEcommerce}</button>
+    <button class="tab-btn" data-flow="cicd">${d.tabCicd}</button>
+    <button class="tab-btn" data-flow="rag">${d.tabRag}</button>
   </div>
 
   <div class="card">
@@ -426,48 +391,32 @@ const demoElementHtml = `<!doctype html>
 
   <div class="console-card">
     <div class="console-header">
-      <span>Event Log (點擊上方含有超連結的節點測試攔截)</span>
-      <button id="clear-btn" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px;">清空紀錄</button>
+      <span>${d.logHeader}</span>
+      <button id="clear-btn" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px;">${d.clearLog}</button>
     </div>
     <div id="logs">
-      <div style="color: #64748b;">(尚未觸發任何 node-click 事件，請點擊圖表中帶有連結的節點)</div>
+      <div class="log-placeholder" style="color: #64748b;">${s.runtime.logEmpty}</div>
     </div>
   </div>
 </main>
 <div class="toast-container" id="toast-container"></div>
 
-<script src="miniflow.js"></script>
+<script src="${rootPrefix(lang)}miniflow.js"></script>
 <script>
+  const ui = ${scriptJson(s.runtime)};
   const specs = ${specsJson};
   const diagram = document.getElementById('diagram');
   const logsEl = document.getElementById('logs');
   const clearBtn = document.getElementById('clear-btn');
   const buttons = document.querySelectorAll('.tab-btn');
 
-  function showToast(label, id) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    const pin = document.createTextNode('📌 點擊節點：');
-    const strong = document.createElement('strong');
-    strong.textContent = label;
-    const suffix = document.createTextNode(' (' + id + ')（範例已停用外部跳轉）');
-    toast.appendChild(pin);
-    toast.appendChild(strong);
-    toast.appendChild(suffix);
-    container.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 250);
-    }, 2000);
-  }
+  ${fmtScript}
+  ${toastScript}
 
-  // 初始化預設規格
+  // Initialize the default spec
   diagram.spec = specs.ecommerce;
 
-  // 切換按鈕事件
+  // Tab switch buttons
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       const flowKey = btn.getAttribute('data-flow');
@@ -477,16 +426,16 @@ const demoElementHtml = `<!doctype html>
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       diagram.spec = targetSpec;
-      addLog('SPEC_CHANGE', '切換為 ' + (targetSpec.title || flowKey));
+      addLog('SPEC_CHANGE', fmt(ui.specChange, { title: targetSpec.title || flowKey }));
     });
   });
 
-  // 攔截 node-click 事件
+  // Intercept node-click events
   diagram.addEventListener('node-click', (e) => {
-    // 阻止瀏覽器跳轉
+    // Prevent browser navigation
     e.preventDefault();
     const { id, href } = e.detail;
-    addLog('NODE_CLICK', '攔截點擊事件：nodeId="' + id + '" → href="' + href + '" (已防止全頁跳轉)');
+    addLog('NODE_CLICK', fmt(ui.nodeClick, { id: id, href: href }));
     const nodeEl = diagram.shadowRoot && diagram.shadowRoot.querySelector('a.mf-link[data-id="' + id + '"]');
     const textEl = nodeEl && nodeEl.querySelector('.mf-text');
     const label = textEl ? textEl.textContent : id;
@@ -494,7 +443,8 @@ const demoElementHtml = `<!doctype html>
   });
 
   function addLog(type, text) {
-    if (logsEl.innerHTML.includes('(尚未觸發任何')) {
+    // Detect an empty log by the placeholder element, not by any language's text
+    if (logsEl.querySelector('.log-placeholder')) {
       logsEl.innerHTML = '';
     }
     const time = new Date().toLocaleTimeString();
@@ -505,12 +455,83 @@ const demoElementHtml = `<!doctype html>
   }
 
   clearBtn.addEventListener('click', () => {
-    logsEl.innerHTML = '<div style="color: #64748b;">(紀錄已清空)</div>';
+    logsEl.innerHTML = '';
+    const note = document.createElement('div');
+    note.className = 'log-placeholder';
+    note.style.color = '#64748b';
+    note.textContent = ui.logCleared;
+    logsEl.appendChild(note);
   });
 </script>
 </body>
 </html>`;
+};
 
-  files['demo-element.html'] = demoElementHtml;
+export function buildShowcase(): Record<string, string> {
+  const files: Record<string, string> = {};
+  const specsJson = scriptJson(flows);
+
+  for (const lang of langs) {
+    const s = shellStrings[lang];
+    const dir = langDir[lang];
+
+    // 1. 獨立的 SVG 與 HTML
+    for (const key of flowKeys) {
+      const { title, desc } = s.flows[key];
+      const svg = render(flows[key]);
+      files[`${dir}${key}.svg`] = svg;
+
+      files[`${dir}${key}.html`] = page({
+        lang,
+        file: `${key}.html`,
+        title,
+        subtitle: desc,
+        activeKey: key,
+        body: `<div style="width: 100%; min-width: 720px;">
+      ${svg.replace('<svg ', '<svg style="display:block;width:100%;height:auto" ')}
+    </div>`,
+      });
+    }
+
+    // 2. 總覽頁面 index.html
+    const indexCards = flowKeys
+      .map((key) => {
+        const { title, desc } = s.flows[key];
+        const svg = render(flows[key]);
+        return `
+    <section style="margin-bottom: 36px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;">
+        <h2 style="margin: 0; font-size: 18px; color: #1e293b;">
+          ${title}
+        </h2>
+        <div style="font-size: 13px;">
+          <a href="${key}.html" style="color: #0284c7; text-decoration: none; margin-right: 12px;">${s.openStandalone}</a>
+          <a href="${key}.svg" target="_blank" style="color: #64748b; text-decoration: none;">${s.viewSvg}</a>
+        </div>
+      </div>
+      <p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">${desc}</p>
+      <div class="card" style="margin-bottom: 8px;">
+        <div style="width: 100%; min-width: 680px;">
+          ${svg.replace('<svg ', '<svg style="display:block;width:100%;height:auto" ')}
+        </div>
+      </div>
+    </section>
+  `;
+      })
+      .join('\n');
+
+    files[`${dir}index.html`] = page({
+      lang,
+      file: 'index.html',
+      title: s.indexTitle,
+      subtitle: s.defaultDesc,
+      activeKey: 'index',
+      body: indexCards,
+    });
+
+    // 3. Web Component 互動頁 (Tab 切換 + 即時 Event Log)
+    files[`${dir}demo-element.html`] = demoPage(lang, specsJson);
+  }
+
   return files;
 }

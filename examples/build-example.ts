@@ -6,7 +6,9 @@ import { buildShowcase } from './showcase';
 const out = new URL('./out/', import.meta.url);
 mkdirSync(out, { recursive: true });
 copyFileSync(new URL('../dist/miniflow.js', import.meta.url), new URL('miniflow.js', out));
-copyFileSync(new URL('./thumb.webp', import.meta.url), new URL('thumb.webp', out));
+for (const thumb of ['thumb.webp', 'thumb.zh-TW.webp']) {
+  copyFileSync(new URL(`./${thumb}`, import.meta.url), new URL(thumb, out));
+}
 
 const files = buildShowcase();
 for (const [path, content] of Object.entries(files)) {
