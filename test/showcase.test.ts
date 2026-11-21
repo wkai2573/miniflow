@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { posix } from 'node:path';
 import { render } from '../src/render';
+import type { FlowSpec } from '../src';
 import { buildShowcase } from '../examples/showcase';
-import { ecommerce } from '../examples/ecommerce';
+import { createEcommerce } from '../examples/ecommerce';
+import type { Lang } from '../examples/shell-strings';
 import { cicd } from '../examples/cicd';
 import { rag } from '../examples/rag';
 
@@ -137,12 +139,56 @@ describe('buildShowcase 站內導覽', () => {
   });
 });
 
+const langs: Lang[] = ['en', 'zh-Hant'];
+
+// 只取結構：節點 id 與格位、連線端點與基調、外框包住的節點
+const structure = (spec: FlowSpec) => ({
+  nodes: spec.nodes.map((n) => [n.id, n.kind, n.icon, n.row, n.col, n.rowSpan, n.colSpan, n.href]),
+  edges: (spec.edges ?? []).map((e) => [e.from, e.to, e.tone, e.fromSide, e.toSide]),
+  frames: (spec.frames ?? []).map((f) => f.wraps),
+  layout: spec.layout,
+});
+
 describe('範例規格', () => {
+  test.each(langs)('電商範例 %s 能通過 render 驗證而不拋錯', (lang) => {
+    expect(() => render(createEcommerce(lang))).not.toThrow();
+  });
+
   test.each([
-    ['ecommerce', ecommerce],
     ['cicd', cicd],
     ['rag', rag],
   ])('%s 能通過 render 驗證而不拋錯', (_name, spec) => {
     expect(() => render(spec)).not.toThrow();
+  });
+
+  test('電商範例兩個語言的節點 id、格位與連線集合完全一致', () => {
+    expect(structure(createEcommerce('en'))).toEqual(structure(createEcommerce('zh-Hant')));
+  });
+
+  test('英文電商範例的所有可見文字都是英文，繁中電商範例維持原文', () => {
+    const visible = (spec: FlowSpec) =>
+      JSON.stringify([
+        spec.title,
+        spec.legend,
+        spec.nodes.map((n) => [n.label, n.sub, n.title]),
+        spec.edges?.map((e) => e.label),
+        spec.frames?.map((f) => f.label),
+      ]);
+    expect(visible(createEcommerce('en'))).not.toMatch(CJK);
+    const zh = createEcommerce('zh-Hant');
+    expect(zh.title).toBe('電商訂單與履約流程');
+    expect(zh.nodes[1]).toMatchObject({ label: '結帳收銀台', sub: '填寫收件資訊', title: '前往結帳' });
+    expect(zh.edges?.[5]?.label).toBe('付款完成 Webhook');
+    expect(zh.frames?.[0]?.label).toBe('01 結帳階段');
+  });
+
+  test('各語言頁面與互動頁內嵌的電商圖使用該語言的文字', () => {
+    expect(files['ecommerce.html']).toContain('E-commerce Order and Fulfillment');
+    expect(files['ecommerce.svg']).toContain('Shopping cart');
+    expect(files['ecommerce.svg']).toContain('Component types');
+    expect(files['zh-TW/ecommerce.svg']).toContain('購物車');
+    expect(files['zh-TW/ecommerce.svg']).toContain('元件類型');
+    expect(files['demo-element.html']).toContain('Shopping cart');
+    expect(files['zh-TW/demo-element.html']).toContain('購物車');
   });
 });

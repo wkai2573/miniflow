@@ -1,14 +1,19 @@
 // 展示站建置器：不接受外部輸入，回傳「相對路徑 → 檔案內容」對照表。
 // 檔案寫入與資源複製由 build-example.ts 負責。
 import { render, type FlowSpec } from '../src';
-import { ecommerce } from './ecommerce';
+import { createEcommerce } from './ecommerce';
 import { cicd } from './cicd';
 import { rag } from './rag';
 import { langs, shellStrings, type Lang } from './shell-strings';
 
 type FlowKey = 'ecommerce' | 'cicd' | 'rag';
-const flows: Record<FlowKey, FlowSpec> = { ecommerce, cicd, rag };
-const flowKeys = Object.keys(flows) as FlowKey[];
+const flowKeys: FlowKey[] = ['ecommerce', 'cicd', 'rag'];
+// 各語言的流程規格；cicd 與 rag 尚未字典化，兩個語言暫用同一份
+export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
+  ecommerce: createEcommerce(lang),
+  cicd,
+  rag,
+});
 
 // 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/
 const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/' };
@@ -469,11 +474,11 @@ const demoPage = (lang: Lang, specsJson: string) => {
 
 export function buildShowcase(): Record<string, string> {
   const files: Record<string, string> = {};
-  const specsJson = scriptJson(flows);
 
   for (const lang of langs) {
     const s = shellStrings[lang];
     const dir = langDir[lang];
+    const flows = flowsFor(lang);
 
     // 1. 獨立的 SVG 與 HTML
     for (const key of flowKeys) {
@@ -530,7 +535,7 @@ export function buildShowcase(): Record<string, string> {
     });
 
     // 3. Web Component 互動頁 (Tab 切換 + 即時 Event Log)
-    files[`${dir}demo-element.html`] = demoPage(lang, specsJson);
+    files[`${dir}demo-element.html`] = demoPage(lang, scriptJson(flows));
   }
 
   return files;
