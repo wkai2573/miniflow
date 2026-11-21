@@ -16,12 +16,16 @@ export const flowsFor = (lang: Lang): Record<FlowKey, FlowSpec> => ({
 });
 
 // 語言對應的輸出子目錄：英文在根目錄，繁中在 zh-TW/
-const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/' };
+export const langDir: Record<Lang, string> = { en: '', 'zh-Hant': 'zh-TW/' };
 const thumbFile: Record<Lang, string> = { en: 'thumb.webp', 'zh-Hant': 'thumb.zh-TW.webp' };
+// 切換連結的 hreflang 屬性值
+const hreflang: Record<Lang, string> = { en: 'en', 'zh-Hant': 'zh-TW' };
+// 切換連結指向的語言。每個語言都必須列出，新增語言時由型別檢查擋下漏列
+const switchTarget: Record<Lang, Lang> = { en: 'zh-Hant', 'zh-Hant': 'en' };
 
 // 從某語言目錄回到輸出根目錄的相對前綴
 const rootPrefix = (lang: Lang) => '../'.repeat(langDir[lang].split('/').length - 1);
-const otherLang = (lang: Lang): Lang => (lang === 'en' ? 'zh-Hant' : 'en');
+const otherLang = (lang: Lang): Lang => switchTarget[lang];
 // 目前語言頁面連到另一個語言同一頁的相對路徑
 const switchHref = (lang: Lang, file: string) =>
   `${rootPrefix(lang)}${langDir[otherLang(lang)]}${file}`;
@@ -55,7 +59,7 @@ const githubLink = (label: string) => `<a href="https://github.com/wkai2573/mini
       </a>`;
 
 const switchLink = (lang: Lang, file: string) =>
-  `<a href="${switchHref(lang, file)}" hreflang="${otherLang(lang) === 'en' ? 'en' : 'zh-TW'}" lang="${otherLang(lang)}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; text-decoration: none; font-weight: 500; font-size: 12px;">${shellStrings[lang].otherLanguageName}</a>`;
+  `<a href="${switchHref(lang, file)}" hreflang="${hreflang[otherLang(lang)]}" lang="${otherLang(lang)}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; text-decoration: none; font-weight: 500; font-size: 12px;">${shellStrings[lang].otherLanguageName}</a>`;
 
 const navHtml = (lang: Lang, activeKey?: string) => {
   const s = shellStrings[lang];

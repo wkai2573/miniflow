@@ -1,8 +1,9 @@
 // 展示頁外殼的所有使用者可見文字，以語言為鍵。
 // ShellStrings 是唯一的鍵定義：任何語言缺鍵或多鍵都會在型別檢查失敗。
-export type Lang = 'en' | 'zh-Hant';
+// 支援語言的唯一來源：Lang 型別由它推導，所有以 Lang 為鍵的 Record 都會在新增語言時要求補齊。
+export const langs = ['en', 'zh-Hant'] as const;
 
-export const langs: readonly Lang[] = ['en', 'zh-Hant'];
+export type Lang = (typeof langs)[number];
 
 export interface FlowStrings {
   /** 頁面與總覽卡片使用的流程標題 */
